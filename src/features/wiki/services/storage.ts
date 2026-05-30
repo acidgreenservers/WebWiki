@@ -1,4 +1,4 @@
-import { WikiPage } from '../types/wiki';
+import { WikiPage } from '@/features/wiki/types/wiki';
 
 const DB_NAME = 'WebWikiDB';
 const STORE_NAME = 'pages';
@@ -131,5 +131,38 @@ export class WikiStorage {
     for (const page of pages) {
       await this.savePage(page);
     }
+  }
+
+  async exportPages(format: 'text' | 'markdown' | 'html' | 'json', pages: WikiPage[]): Promise<void> {
+    let content = '';
+    let mimeType = 'text/plain';
+    let extension = 'txt';
+
+    if (format === 'json') {
+      content = JSON.stringify({ version: '1.0', pages }, null, 2);
+      mimeType = 'application/json';
+      extension = 'json';
+    } else if (format === 'markdown') {
+      content = pages.map(p => `# ${p.title}\n\n${p.content}`).join('\n\n---\n\n');
+      extension = 'md';
+    } else if (format === 'html') {
+      content = `<html><head><style>body{font-family:sans-serif;max-width:800px;margin:2em auto;line-height:1.6;padding:0 1em;}hr{margin:4em 0;}</style></head><body>` + 
+                pages.map(p => `<h1>${p.title}</h1><div>${p.content}</div>`).join('<hr/>') + 
+                `</body></html>`;
+      mimeType = 'text/html';
+      extension = 'html';
+    } else {
+      content = pages.map(p => `${p.title}\n${'='.repeat(p.title.length)}\n\n${p.content}`).join('\n\n\n');
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `webwiki-export-${new Date().toISOString().split('T')[0]}.${extension}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 }

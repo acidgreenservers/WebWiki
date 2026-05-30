@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button } from '../../components/ui/button';
+import { Button } from '@/components/ui/button';
 import { 
   Bold, 
   Italic, 
@@ -14,13 +14,10 @@ import {
   Calendar,
   Users,
   MapPin,
-  Paperclip,
-  FileText
+  Paperclip
 } from 'lucide-react';
-import { WikiPage } from '../types/wiki';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Card, CardContent } from '../../components/ui/card';
+import { WikiPage } from '@/features/wiki/types/wiki';
+import { Input } from '@/components/ui/input';
 
 interface EditorToolbarProps {
   currentPage: WikiPage | null;
@@ -68,15 +65,14 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   };
 
   return (
-    <div className="border-b border-[#30363d] bg-[#161b22] p-2">
+    <div className="border-b border-border bg-surface p-2">
       <div className="flex flex-wrap items-center gap-1">
         {/* Text formatting */}
-        <div className="flex border-r border-[#30363d] pr-2 mr-2">
+        <div className="flex border-r border-border pr-2 mr-2">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => onFormat('bold')}
-            className="text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]"
             title="Bold"
           >
             <Bold className="h-4 w-4" />
@@ -85,7 +81,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             variant="ghost" 
             size="sm" 
             onClick={() => onFormat('italic')}
-            className="text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]"
             title="Italic"
           >
             <Italic className="h-4 w-4" />
@@ -93,12 +88,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </div>
 
         {/* Lists */}
-        <div className="flex border-r border-[#30363d] pr-2 mr-2">
+        <div className="flex border-r border-border pr-2 mr-2">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => onFormat('unordered-list')}
-            className="text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]"
             title="Bullet List"
           >
             <List className="h-4 w-4" />
@@ -107,7 +101,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             variant="ghost" 
             size="sm" 
             onClick={() => onFormat('ordered-list')}
-            className="text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]"
             title="Numbered List"
           >
             <ListOrdered className="h-4 w-4" />
@@ -115,25 +108,25 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </div>
 
         {/* Links */}
-        <div className="relative border-r border-[#30363d] pr-2 mr-2">
+        <div className="relative border-r border-border pr-2 mr-2">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => setShowLinkMenu(!showLinkMenu)}
-            className={`text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] ${showLinkMenu ? 'bg-[#21262d]' : ''}`}
+            className={showLinkMenu ? 'bg-border-subtle' : ''}
             title="Insert Link"
           >
             <Link className="h-4 w-4" />
           </Button>
           
           {showLinkMenu && (
-            <div className="absolute top-full left-0 mt-1 w-64 bg-[#161b22] border border-[#30363d] rounded-lg shadow-lg z-10">
-              <div className="p-2 border-b border-[#30363d]">
+            <div className="absolute top-full left-0 mt-1 w-64 bg-surface border border-border rounded-lg shadow-lg z-10">
+              <div className="p-2 border-b border-border">
                 <Input 
                   placeholder="Search pages..." 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="bg-[#0d1117] border-[#30363d] text-[#e6edf3]"
+                  className="bg-background border-border"
                 />
               </div>
               <div className="max-h-48 overflow-y-auto">
@@ -142,19 +135,19 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     <Button
                       key={page.id}
                       variant="ghost"
-                      className="w-full justify-start text-left text-[#e6edf3] hover:bg-[#21262d] rounded-none"
+                      className="w-full justify-start text-left rounded-none"
                       onClick={() => {
                         onInsertLink(page.id);
                         setShowLinkMenu(false);
                         setSearchTerm('');
                       }}
                     >
-                      <Link2 className="h-4 w-4 mr-2 text-[#3b6ef8]" />
+                      <Link2 className="h-4 w-4 mr-2 text-primary" />
                       {page.title}
                     </Button>
                   ))
                 ) : (
-                  <div className="p-3 text-center text-[#8b949e] text-sm">
+                  <div className="p-3 text-center text-text-secondary text-sm">
                     No pages found
                   </div>
                 )}
@@ -164,30 +157,30 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </div>
 
         {/* Tags */}
-        <div className="relative border-r border-[#30363d] pr-2 mr-2">
+        <div className="relative border-r border-border pr-2 mr-2">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => setShowTagInput(!showTagInput)}
-            className={`text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] ${showTagInput ? 'bg-[#21262d]' : ''}`}
+            className={showTagInput ? 'bg-border-subtle' : ''}
             title="Add Tag"
           >
             <Tag className="h-4 w-4" />
           </Button>
           
           {showTagInput && (
-            <div className="absolute top-full left-0 mt-1 w-64 bg-[#161b22] border border-[#30363d] rounded-lg shadow-lg z-10 p-2">
+            <div className="absolute top-full left-0 mt-1 w-64 bg-surface border border-border rounded-lg shadow-lg z-10 p-2">
               <div className="flex">
                 <Input 
                   placeholder="Enter tag..." 
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="bg-[#0d1117] border-[#30363d] text-[#e6edf3] flex-1"
+                  className="bg-background border-border flex-1"
                 />
                 <Button 
                   size="sm" 
-                  className="ml-2 bg-[#3b6ef8] hover:bg-[#2d5ce8]"
+                  className="ml-2"
                   onClick={handleAddTag}
                 >
                   <Plus className="h-4 w-4" />
@@ -198,25 +191,25 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </div>
 
         {/* Connections */}
-        <div className="relative border-r border-[#30363d] pr-2 mr-2">
+        <div className="relative border-r border-border pr-2 mr-2">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => setShowConnectionMenu(!showConnectionMenu)}
-            className={`text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] ${showConnectionMenu ? 'bg-[#21262d]' : ''}`}
+            className={showConnectionMenu ? 'bg-border-subtle' : ''}
             title="Connect to Page"
           >
             <Link2 className="h-4 w-4" />
           </Button>
           
           {showConnectionMenu && (
-            <div className="absolute top-full left-0 mt-1 w-64 bg-[#161b22] border border-[#30363d] rounded-lg shadow-lg z-10">
-              <div className="p-2 border-b border-[#30363d]">
+            <div className="absolute top-full left-0 mt-1 w-64 bg-surface border border-border rounded-lg shadow-lg z-10">
+              <div className="p-2 border-b border-border">
                 <Input 
                   placeholder="Search pages..." 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="bg-[#0d1117] border-[#30363d] text-[#e6edf3]"
+                  className="bg-background border-border"
                 />
               </div>
               <div className="max-h-48 overflow-y-auto">
@@ -225,19 +218,19 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     <Button
                       key={page.id}
                       variant="ghost"
-                      className="w-full justify-start text-left text-[#e6edf3] hover:bg-[#21262d] rounded-none"
+                      className="w-full justify-start text-left rounded-none"
                       onClick={() => {
                         onAddConnection(page.id);
                         setShowConnectionMenu(false);
                         setSearchTerm('');
                       }}
                     >
-                      <Paperclip className="h-4 w-4 mr-2 text-[#3b6ef8]" />
+                      <Paperclip className="h-4 w-4 mr-2 text-primary" />
                       {page.title}
                     </Button>
                   ))
                 ) : (
-                  <div className="p-3 text-center text-[#8b949e] text-sm">
+                  <div className="p-3 text-center text-text-secondary text-sm">
                     No pages found
                   </div>
                 )}
@@ -252,56 +245,56 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             variant="ghost" 
             size="sm" 
             onClick={() => setShowSectionMenu(!showSectionMenu)}
-            className={`text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] ${showSectionMenu ? 'bg-[#21262d]' : ''}`}
+            className={showSectionMenu ? 'bg-border-subtle' : ''}
             title="Add Structured Section"
           >
             <Plus className="h-4 w-4" />
           </Button>
           
           {showSectionMenu && (
-            <div className="absolute top-full left-0 mt-1 w-48 bg-[#161b22] border border-[#30363d] rounded-lg shadow-lg z-10">
+            <div className="absolute top-full left-0 mt-1 w-48 bg-surface border border-border rounded-lg shadow-lg z-10">
               <Button
                 variant="ghost"
-                className="w-full justify-start text-left text-[#e6edf3] hover:bg-[#21262d] rounded-none"
+                className="w-full justify-start text-left rounded-none"
                 onClick={() => {
                   onAddSection('metadata');
                   setShowSectionMenu(false);
                 }}
               >
-                <Hash className="h-4 w-4 mr-2 text-[#3b6ef8]" />
+                <Hash className="h-4 w-4 mr-2 text-primary" />
                 Metadata Section
               </Button>
               <Button
                 variant="ghost"
-                className="w-full justify-start text-left text-[#e6edf3] hover:bg-[#21262d] rounded-none"
+                className="w-full justify-start text-left rounded-none"
                 onClick={() => {
                   onAddSection('timeline');
                   setShowSectionMenu(false);
                 }}
               >
-                <Calendar className="h-4 w-4 mr-2 text-[#3b6ef8]" />
+                <Calendar className="h-4 w-4 mr-2 text-primary" />
                 Timeline Section
               </Button>
               <Button
                 variant="ghost"
-                className="w-full justify-start text-left text-[#e6edf3] hover:bg-[#21262d] rounded-none"
+                className="w-full justify-start text-left rounded-none"
                 onClick={() => {
                   onAddSection('people');
                   setShowSectionMenu(false);
                 }}
               >
-                <Users className="h-4 w-4 mr-2 text-[#3b6ef8]" />
+                <Users className="h-4 w-4 mr-2 text-primary" />
                 People Section
               </Button>
               <Button
                 variant="ghost"
-                className="w-full justify-start text-left text-[#e6edf3] hover:bg-[#21262d] rounded-none"
+                className="w-full justify-start text-left rounded-none"
                 onClick={() => {
                   onAddSection('locations');
                   setShowSectionMenu(false);
                 }}
               >
-                <MapPin className="h-4 w-4 mr-2 text-[#3b6ef8]" />
+                <MapPin className="h-4 w-4 mr-2 text-primary" />
                 Locations Section
               </Button>
             </div>
@@ -315,15 +308,14 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           {currentPage.tags.map((tag, index) => (
             <span 
               key={index} 
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#3b6ef8] bg-opacity-20 text-[#3b6ef8] border border-[#3b6ef8]"
+              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary bg-opacity-20 text-primary border border-primary"
             >
               {tag}
               <button 
                 onClick={() => {
-                  // In a real implementation, we would remove the tag
                   console.log(`Remove tag: ${tag}`);
                 }}
-                className="ml-1 hover:text-[#f87171]"
+                className="ml-1 hover:text-red-danger"
               >
                 <X className="h-3 w-3" />
               </button>

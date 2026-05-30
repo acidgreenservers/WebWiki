@@ -1,6 +1,6 @@
 import React from 'react';
-import { WikiPage } from '../types/wiki';
-import { Button } from '../../components/ui/button';
+import { WikiPage } from '@/features/wiki/types/wiki';
+import { Button } from '@/components/ui/button';
 import { Trash2, FileText } from 'lucide-react';
 
 interface PageListProps {
@@ -18,31 +18,31 @@ export const PageList: React.FC<PageListProps> = ({
 }) => {
   return (
     <div className="p-3">
-      <h2 className="font-semibold text-[#8b949e] px-2 py-3 border-b border-[#30363d] uppercase text-xs tracking-wider">
+      <h2 className="font-semibold text-text-secondary px-2 py-3 border-b border-border uppercase text-xs tracking-wider">
         Pages ({pages.length})
       </h2>
       <div className="mt-2">
         {pages.length === 0 ? (
-          <p className="text-[#6e7681] text-sm p-4 text-center italic">No pages yet</p>
+          <p className="text-text-muted text-sm p-4 text-center italic">No pages yet</p>
         ) : (
           pages.map(page => (
             <div 
               key={page.id}
-              className={`flex items-center justify-between p-3 rounded mb-1 cursor-pointer hover:bg-[#21262d] border-l-2 ${
+              className={`flex items-center justify-between p-3 rounded mb-1 cursor-pointer hover:bg-border-subtle border-l-2 ${
                 selectedPage?.id === page.id 
-                  ? 'bg-[#21262d] border-[#3b6ef8]' 
+                  ? 'bg-border-subtle border-primary' 
                   : 'border-transparent'
               }`}
               onClick={() => onSelectPage(page)}
             >
               <div className="flex items-center truncate">
-                <FileText className="h-4 w-4 text-[#8b949e] mr-2 flex-shrink-0" />
-                <span className="truncate text-[#e6edf3]">{page.title}</span>
+                <FileText className="h-4 w-4 text-text-secondary mr-2 flex-shrink-0" />
+                <span className="truncate text-text-primary">{page.title}</span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 text-[#8b949e] hover:text-[#f87171] hover:bg-[#21262d]"
+                className="h-7 w-7 p-0 hover:text-red-danger"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeletePage(page.id);

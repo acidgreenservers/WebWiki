@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { WikiPage } from './types/wiki';
-import { WikiStorage } from './utils/storage';
-import { PageEditor } from './components/PageEditor';
-import { PageList } from './components/PageList';
-import { ExportPanel } from './components/ExportPanel';
-import { ImportPanel } from './components/ImportPanel';
-import { Button } from '../components/ui/button';
+import { WikiPage } from '@/features/wiki/types/wiki';
+import { WikiStorage } from '@/features/wiki/services/storage';
+import { PageEditor } from '@/features/wiki/components/PageEditor';
+import { PageList } from '@/features/wiki/components/PageList';
+import { ExportPanel } from '@/features/wiki/components/ExportPanel';
+import { ImportPanel } from '@/features/wiki/components/ImportPanel';
+import { Button } from '@/components/ui/button';
 import { Plus, BookOpen, Download, Upload, Database } from 'lucide-react';
 
 function App() {
@@ -74,24 +74,24 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#0d1117]" 
+    <div className="flex flex-col h-screen bg-background" 
          style={{ backgroundImage: 'radial-gradient(ellipse at 30% 20%, rgba(30, 50, 80, 0.6) 0%, transparent 60%)' }}>
-      <header className="bg-transparent text-[#e6edf3] p-4 border-b border-[#30363d]">
+      <header className="bg-transparent text-text-primary p-4 border-b border-border">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold flex items-center">
-            <BookOpen className="mr-2 text-[#3b6ef8]" />
+            <BookOpen className="mr-2 text-primary" />
             <span className="font-sans font-semibold">WebWiki</span>
           </h1>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center text-sm bg-[#161b22] px-3 py-1 rounded-full border border-[#30363d]">
-              <Database className="mr-2 h-4 w-4 text-[#22c55e]" />
+            <div className="flex items-center text-sm bg-surface px-3 py-1 rounded-full border border-border">
+              <Database className="mr-2 h-4 w-4 text-success" />
               <span>LOCAL ONLY</span>
             </div>
             <div className="flex space-x-2">
               <Button 
                 onClick={() => setShowImport(true)}
                 variant="outline"
-                className="flex items-center bg-[#21262d] border-[#30363d] text-[#e6edf3] hover:border-[#484f58] hover:bg-[#21262d]"
+                className="flex items-center"
               >
                 <Upload className="mr-2 h-4 w-4" />
                 Import
@@ -99,14 +99,14 @@ function App() {
               <Button 
                 onClick={() => setShowExport(true)}
                 variant="outline"
-                className="flex items-center bg-[#21262d] border-[#30363d] text-[#e6edf3] hover:border-[#484f58] hover:bg-[#21262d]"
+                className="flex items-center"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Export
               </Button>
               <Button 
                 onClick={handleCreatePage}
-                className="flex items-center bg-[#3b6ef8] hover:bg-[#2d5ce8] text-white shadow-[0_4px_12px_rgba(59,110,248,0.3)]"
+                className="flex items-center"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 New Page
@@ -117,7 +117,7 @@ function App() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-64 bg-[#161b22] border-r border-[#30363d] overflow-y-auto">
+        <div className="w-64 bg-surface border-r border-border overflow-y-auto">
           <PageList 
             pages={pages} 
             selectedPage={selectedPage}
@@ -126,21 +126,22 @@ function App() {
           />
         </div>
 
-        <div className="flex-1 overflow-auto bg-[#0d1117]">
+        <div className="flex-1 overflow-auto bg-background">
           {selectedPage ? (
             <PageEditor 
               page={selectedPage} 
               onSave={handleUpdatePage}
+              allPages={pages}
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-[#8b949e]">
-              <div className="text-center p-8 bg-[#161b22] rounded-xl border border-[#30363d] max-w-md">
-                <BookOpen className="mx-auto h-12 w-12 text-[#3b6ef8]" />
-                <h3 className="mt-4 text-xl font-semibold text-[#e6edf3]">No page selected</h3>
+            <div className="flex items-center justify-center h-full text-text-secondary">
+              <div className="text-center p-8 bg-surface rounded-xl border border-border max-w-md">
+                <BookOpen className="mx-auto h-12 w-12 text-primary" />
+                <h3 className="mt-4 text-xl font-semibold text-text-primary">No page selected</h3>
                 <p className="mt-2">Create a new page or select an existing one to begin</p>
                 <Button 
                   onClick={handleCreatePage}
-                  className="mt-6 bg-[#3b6ef8] hover:bg-[#2d5ce8] text-white shadow-[0_4px_12px_rgba(59,110,248,0.3)]"
+                  className="mt-6"
                 >
                   Create New Page
                 </Button>

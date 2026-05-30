@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Label } from '../../components/ui/label';
-import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Download, X, FileText, FileCode, FileArchive } from 'lucide-react';
-import { WikiStorage } from '../utils/storage';
-import { WikiPage } from '../types/wiki';
+import { WikiStorage } from '@/features/wiki/services/storage';
+import { WikiPage } from '@/features/wiki/types/wiki';
 
 interface ExportPanelProps {
   onClose: () => void;
@@ -46,27 +46,26 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
 
   const getFormatIcon = () => {
     switch (format) {
-      case 'text': return <FileText className="h-5 w-5 text-[#3b6ef8]" />;
-      case 'markdown': return <FileCode className="h-5 w-5 text-[#3b6ef8]" />;
-      case 'html': return <FileCode className="h-5 w-5 text-[#3b6ef8]" />;
-      case 'json': return <FileCode className="h-5 w-5 text-[#3b6ef8]" />;
-      default: return <FileText className="h-5 w-5 text-[#3b6ef8]" />;
+      case 'text': return <FileText className="h-5 w-5 text-primary" />;
+      case 'markdown': return <FileCode className="h-5 w-5 text-primary" />;
+      case 'html': return <FileCode className="h-5 w-5 text-primary" />;
+      case 'json': return <FileCode className="h-5 w-5 text-primary" />;
+      default: return <FileText className="h-5 w-5 text-primary" />;
     }
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <Card className="w-full max-w-md bg-[#161b22] border border-[#30363d]">
-        <CardHeader className="flex flex-row items-center justify-between border-b border-[#30363d]">
-          <CardTitle className="flex items-center text-[#e6edf3]">
-            <Download className="mr-2 h-5 w-5 text-[#3b6ef8]" />
+      <Card className="w-full max-w-md bg-surface border border-border">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-border">
+          <CardTitle className="flex items-center text-text-primary">
+            <Download className="mr-2 h-5 w-5 text-primary" />
             Export Wiki
           </CardTitle>
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={onClose}
-            className="text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -75,60 +74,60 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
         <CardContent className="pt-6">
           <div className="space-y-6">
             <div>
-              <Label className="text-base font-medium text-[#e6edf3]">Export Format</Label>
+              <Label className="text-base font-medium text-text-primary">Export Format</Label>
               <RadioGroup 
                 value={format} 
                 onValueChange={(value) => setFormat(value as any)}
                 className="mt-3 space-y-3"
               >
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-[#30363d] bg-[#1c2128] hover:border-[#3b6ef8] hover:bg-[#161b22] transition-colors">
-                  <RadioGroupItem value="text" id="text" className="border-[#30363d] text-[#3b6ef8]" />
-                  <Label htmlFor="text" className="flex items-center space-x-2 text-[#e6edf3] cursor-pointer flex-1">
-                    <FileText className="h-5 w-5 text-[#3b6ef8]" />
+                <div className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-elevated hover:border-primary hover:bg-surface transition-colors">
+                  <RadioGroupItem value="text" id="text" className="border-border text-primary" />
+                  <Label htmlFor="text" className="flex items-center space-x-2 text-text-primary cursor-pointer flex-1">
+                    <FileText className="h-5 w-5 text-primary" />
                     <span>Plain Text</span>
                   </Label>
                 </div>
                 
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-[#30363d] bg-[#1c2128] hover:border-[#3b6ef8] hover:bg-[#161b22] transition-colors">
-                  <RadioGroupItem value="markdown" id="markdown" className="border-[#30363d] text-[#3b6ef8]" />
-                  <Label htmlFor="markdown" className="flex items-center space-x-2 text-[#e6edf3] cursor-pointer flex-1">
-                    <FileCode className="h-5 w-5 text-[#3b6ef8]" />
+                <div className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-elevated hover:border-primary hover:bg-surface transition-colors">
+                  <RadioGroupItem value="markdown" id="markdown" className="border-border text-primary" />
+                  <Label htmlFor="markdown" className="flex items-center space-x-2 text-text-primary cursor-pointer flex-1">
+                    <FileCode className="h-5 w-5 text-primary" />
                     <span>Markdown</span>
                   </Label>
                 </div>
                 
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-[#30363d] bg-[#1c2128] hover:border-[#3b6ef8] hover:bg-[#161b22] transition-colors">
-                  <RadioGroupItem value="html" id="html" className="border-[#30363d] text-[#3b6ef8]" />
-                  <Label htmlFor="html" className="flex items-center space-x-2 text-[#e6edf3] cursor-pointer flex-1">
-                    <FileCode className="h-5 w-5 text-[#3b6ef8]" />
+                <div className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-elevated hover:border-primary hover:bg-surface transition-colors">
+                  <RadioGroupItem value="html" id="html" className="border-border text-primary" />
+                  <Label htmlFor="html" className="flex items-center space-x-2 text-text-primary cursor-pointer flex-1">
+                    <FileCode className="h-5 w-5 text-primary" />
                     <span>Styled HTML</span>
                   </Label>
                 </div>
                 
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-[#30363d] bg-[#1c2128] hover:border-[#3b6ef8] hover:bg-[#161b22] transition-colors">
-                  <RadioGroupItem value="json" id="json" className="border-[#30363d] text-[#3b6ef8]" />
-                  <Label htmlFor="json" className="flex items-center space-x-2 text-[#e6edf3] cursor-pointer flex-1">
-                    <FileArchive className="h-5 w-5 text-[#3b6ef8]" />
+                <div className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-elevated hover:border-primary hover:bg-surface transition-colors">
+                  <RadioGroupItem value="json" id="json" className="border-border text-primary" />
+                  <Label htmlFor="json" className="flex items-center space-x-2 text-text-primary cursor-pointer flex-1">
+                    <FileArchive className="h-5 w-5 text-primary" />
                     <span>WebWiki JSON</span>
                   </Label>
                 </div>
               </RadioGroup>
             </div>
 
-            <div className="p-3 rounded-lg bg-[#21262d] border border-[#30363d]">
+            <div className="p-3 rounded-lg bg-border-subtle border border-border">
               <div className="flex items-start">
                 {getFormatIcon()}
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-[#e6edf3]">
+                  <p className="text-sm font-medium text-text-primary">
                     {format === 'json' ? 'WebWiki JSON Format' : format.charAt(0).toUpperCase() + format.slice(1)}
                   </p>
-                  <p className="text-xs text-[#8b949e] mt-1">
+                  <p className="text-xs text-text-secondary mt-1">
                     {format === 'json' 
                       ? 'Structured format for importing into WebWiki. Contains all page data and metadata.' 
                       : getFormatDescription()}
                   </p>
                   {format === 'json' && (
-                    <div className="mt-2 p-2 bg-[#161b22] rounded text-xs font-mono text-[#8b949e] overflow-x-auto">
+                    <div className="mt-2 p-2 bg-surface rounded text-xs font-mono text-text-secondary overflow-x-auto">
                       {`{ "version": "1.0", "pages": [ ... ] }`}
                     </div>
                   )}
@@ -140,14 +139,13 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
               <Button 
                 variant="outline"
                 onClick={onClose}
-                className="bg-[#21262d] border-[#30363d] text-[#e6edf3] hover:border-[#484f58] hover:bg-[#21262d]"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleExport}
                 disabled={isExporting}
-                className="flex items-center bg-[#3b6ef8] hover:bg-[#2d5ce8] text-white shadow-[0_4px_12px_rgba(59,110,248,0.3)]"
+                className="flex items-center"
               >
                 {isExporting ? (
                   <>
