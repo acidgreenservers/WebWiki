@@ -7,6 +7,7 @@ import { ExportPanel } from '@/features/wiki/components/ExportPanel';
 import { ImportPanel } from '@/features/wiki/components/ImportPanel';
 import { Button } from '@/components/ui/button';
 import { Plus, BookOpen, Download, Upload, Database } from 'lucide-react';
+import { DeleteConfirmationModal } from '@/features/wiki/components/DeleteConfirmationModal';
 
 function App() {
   const [pages, setPages] = useState<WikiPage[]>([]);
@@ -14,6 +15,13 @@ function App() {
   const [showExport, setShowExport] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [storage] = useState(() => new WikiStorage());
+
+  // Deletion state
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    pageId: string | null;
+    step: 1 | 2;
+  }>({ isOpen: false, pageId: null, step: 1 });
 
   useEffect(() => {
     const loadPages = async () => {
@@ -26,29 +34,163 @@ function App() {
     loadPages();
   }, [storage, selectedPage]);
 
-  const handleCreatePage = async () => {
+  const handleCreatePage = async (parentId: string | null = null) => {
     const newPage: WikiPage = {
       id: Date.now().toString(),
-      title: 'New Page',
+      title: parentId ? 'New Sub-page' : 'New Page',
       content: '',
       createdAt: new Date(),
       updatedAt: new Date(),
-      parentId: null,
+      parentId: parentId,
       children: [],
     };
     
     await storage.savePage(newPage);
-    setPages([...pages, newPage]);
+
+    if (parentId) {
+      const parentPage = pages.find(p => p.id === parentId);
+      if (parentPage) {
+        const updatedParent = {
+          ...parentPage,
+          children: [...(parentPage.children || []), newPage.id],
+          updatedAt: new Date()
+        };
+        await storage.savePage(updatedParent);
+        setPages(prev => prev.map(p => p.id === parentId ? updatedParent : p).concat(newPage));
+      } else {
+        setPages(prev => [...prev, newPage]);
+      }
+    } else {
+      setPages(prev => [...prev, newPage]);
+    }
+
     setSelectedPage(newPage);
   };
 
+  const getRecursiveIds = (id: string, allPages: WikiPage[]): string[] => {
+    const page = allPages.find(p => p.id === id);
+    if (!page) return [];
+
+    let ids = [id];
+    const children = allPages.filter(p => p.parentId === id);
+    for (const child of children) {
+      ids = [...ids, ...getRecursiveIds(child.id, allPages)];
+    }
+    return ids;
+  };
+
   const handleDeletePage = async (id: string) => {
-    await storage.deletePage(id);
-    const updatedPages = pages.filter(page => page.id !== id);
+    const pageToDelete = pages.find(p => p.id === id);
+    if (!pageToDelete) return;
+
+    const hasChildren = pages.some(p => p.parentId === id);
+
+    if (hasChildren) {
+      setDeleteDialog({ isOpen: true, pageId: id, step: 1 });
+    } else {
+      // Simple deletion for pages without children (single confirmation)
+      setDeleteDialog({ isOpen: true, pageId: id, step: 2 });
+    }
+  };
+
+  const confirmDelete = async () => {
+    const id = deleteDialog.pageId;
+    if (!id) return;
+
+    const pageToDelete = pages.find(p => p.id === id);
+    if (!pageToDelete) return;
+
+    const hasChildren = pages.some(p => p.parentId === id);
+
+    if (hasChildren && deleteDialog.step === 1) {
+      setDeleteDialog({ ...deleteDialog, step: 2 });
+      return;
+    }
+
+    // Final confirmation step
+    const idsToDelete = getRecursiveIds(id, pages);
+
+    for (const deleteId of idsToDelete) {
+      await storage.deletePage(deleteId);
+    }
+
+    // Update parent if exists
+    let updatedPages = pages.filter(p => !idsToDelete.includes(p.id));
+    if (pageToDelete.parentId) {
+      const parent = updatedPages.find(p => p.id === pageToDelete.parentId);
+      if (parent) {
+        const updatedParent = {
+          ...parent,
+          children: (parent.children || []).filter(childId => childId !== id),
+          updatedAt: new Date()
+        };
+        await storage.savePage(updatedParent);
+        updatedPages = updatedPages.map(p => p.id === parent.id ? updatedParent : p);
+      }
+    }
+
     setPages(updatedPages);
     
-    if (selectedPage?.id === id) {
+    if (selectedPage && idsToDelete.includes(selectedPage.id)) {
       setSelectedPage(updatedPages.length > 0 ? updatedPages[0] : null);
+    }
+
+    setDeleteDialog({ isOpen: false, pageId: null, step: 1 });
+  };
+
+  const handleMovePage = async (pageId: string, newParentId: string | null) => {
+    const page = pages.find(p => p.id === pageId);
+    if (!page || page.parentId === newParentId) return;
+
+    // Prevent moving a page into one of its own descendants
+    const descendantIds = getRecursiveIds(pageId, pages);
+    if (newParentId && descendantIds.includes(newParentId)) {
+      console.error("Cannot move a page into its own descendant");
+      return;
+    }
+
+    let updatedPages = [...pages];
+
+    // 1. Remove from old parent
+    if (page.parentId) {
+      const oldParent = updatedPages.find(p => p.id === page.parentId);
+      if (oldParent) {
+        const updatedOldParent = {
+          ...oldParent,
+          children: (oldParent.children || []).filter(id => id !== pageId),
+          updatedAt: new Date()
+        };
+        await storage.savePage(updatedOldParent);
+        updatedPages = updatedPages.map(p => p.id === oldParent.id ? updatedOldParent : p);
+      }
+    }
+
+    // 2. Update the page itself
+    const updatedPage = {
+      ...page,
+      parentId: newParentId,
+      updatedAt: new Date()
+    };
+    await storage.savePage(updatedPage);
+    updatedPages = updatedPages.map(p => p.id === pageId ? updatedPage : p);
+
+    // 3. Add to new parent
+    if (newParentId) {
+      const newParent = updatedPages.find(p => p.id === newParentId);
+      if (newParent) {
+        const updatedNewParent = {
+          ...newParent,
+          children: [...(newParent.children || []), pageId],
+          updatedAt: new Date()
+        };
+        await storage.savePage(updatedNewParent);
+        updatedPages = updatedPages.map(p => p.id === newParentId ? updatedNewParent : p);
+      }
+    }
+
+    setPages(updatedPages);
+    if (selectedPage?.id === pageId) {
+      setSelectedPage(updatedPage);
     }
   };
 
@@ -105,7 +247,7 @@ function App() {
                 Export
               </Button>
               <Button 
-                onClick={handleCreatePage}
+                onClick={() => handleCreatePage(null)}
                 className="flex items-center"
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -123,6 +265,8 @@ function App() {
             selectedPage={selectedPage}
             onSelectPage={handleSelectPage}
             onDeletePage={handleDeletePage}
+            onCreateSubPage={handleCreatePage}
+            onMovePage={handleMovePage}
           />
         </div>
 
@@ -131,6 +275,8 @@ function App() {
             <PageEditor 
               page={selectedPage} 
               onSave={handleUpdatePage}
+              onSelectPage={handleSelectPage}
+              onCreateSubPage={handleCreatePage}
               allPages={pages}
             />
           ) : (
@@ -140,7 +286,7 @@ function App() {
                 <h3 className="mt-4 text-xl font-semibold text-text-primary">No page selected</h3>
                 <p className="mt-2">Create a new page or select an existing one to begin</p>
                 <Button 
-                  onClick={handleCreatePage}
+                  onClick={() => handleCreatePage(null)}
                   className="mt-6"
                 >
                   Create New Page
@@ -164,6 +310,20 @@ function App() {
           onImportComplete={handleImportComplete}
         />
       )}
+
+      <DeleteConfirmationModal
+        isOpen={deleteDialog.isOpen}
+        step={deleteDialog.step}
+        title={deleteDialog.step === 1 ? "Remove Parent Page?" : "Confirm Destructive Action"}
+        message={
+          deleteDialog.step === 1
+            ? `This page has sub-pages. Deleting it will also remove all nested content recursively.`
+            : `Are you absolutely sure you want to delete "${pages.find(p => p.id === deleteDialog.pageId)?.title}"? This action cannot be undone.`
+        }
+        confirmText={deleteDialog.step === 1 ? "Proceed to Confirm" : "Delete Permanently"}
+        onClose={() => setDeleteDialog({ isOpen: false, pageId: null, step: 1 })}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

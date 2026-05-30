@@ -4,16 +4,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock, Save } from 'lucide-react';
+import { Calendar, Clock, Save, ChevronRight, Home } from 'lucide-react';
 import { EditorToolbar } from './EditorToolbar';
 
 interface PageEditorProps {
   page: WikiPage;
   onSave: (page: WikiPage) => void;
+  onSelectPage: (page: WikiPage) => void;
+  onCreateSubPage: (parentId: string) => void;
   allPages: WikiPage[];
 }
 
-export const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, allPages }) => {
+export const PageEditor: React.FC<PageEditorProps> = ({
+  page,
+  onSave,
+  onSelectPage,
+  onCreateSubPage,
+  allPages
+}) => {
   const [title, setTitle] = useState(page.title);
   const [content, setContent] = useState(page.content);
   const [isSaving, setIsSaving] = useState(false);
@@ -81,8 +89,48 @@ export const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, allPages }
     setContent(prev => prev + `\n\n## ${type.toUpperCase()}\n- `);
   };
 
+  const getBreadcrumbs = () => {
+    const crumbs: WikiPage[] = [];
+    let current: WikiPage | undefined = page;
+
+    while (current) {
+      crumbs.unshift(current);
+      const pid: string | null = current.parentId;
+      current = allPages.find(p => p.id === pid);
+    }
+
+    return crumbs;
+  };
+
+  const breadcrumbs = getBreadcrumbs();
+
   return (
     <div className="h-full flex flex-col">
+      <div className="bg-surface border-b border-border px-4 py-2 flex items-center text-xs text-text-secondary overflow-x-auto whitespace-nowrap">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 w-6 p-0 mr-1"
+          onClick={() => {
+            const rootPages = allPages.filter(p => p.parentId === null);
+            if (rootPages.length > 0) onSelectPage(rootPages[0]);
+          }}
+          title="Go to root page"
+        >
+          <Home className="h-3 w-3" />
+        </Button>
+        {breadcrumbs.map((crumb, index) => (
+          <React.Fragment key={crumb.id}>
+            {index > 0 && <ChevronRight className="h-3 w-3 mx-1 opacity-50" />}
+            <button
+              className={`hover:text-primary transition-colors ${index === breadcrumbs.length - 1 ? 'text-text-primary font-semibold' : ''}`}
+              onClick={() => onSelectPage(crumb)}
+            >
+              {crumb.title}
+            </button>
+          </React.Fragment>
+        ))}
+      </div>
       <EditorToolbar 
         currentPage={page}
         allPages={allPages}
@@ -91,6 +139,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({ page, onSave, allPages }
         onAddTag={handleAddTag}
         onAddConnection={handleAddConnection}
         onAddSection={handleAddSection}
+        onCreateSubPage={onCreateSubPage}
       />
       <Card className="flex-1 flex flex-col border-0 rounded-none shadow-none bg-background">
         <CardHeader className="border-b border-border bg-surface">
