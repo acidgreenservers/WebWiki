@@ -6,8 +6,12 @@ dist
 
 # Environment files
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # IDE / editor
 .vscode/*
@@ -16,6 +20,8 @@ dist
 .idea
 *.swp
 *.swo
+*.swn
+*~
 
 # OS files
 .DS_Store
@@ -24,6 +30,9 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Testing (future)
+coverage
 
 # Misc
 .cache
