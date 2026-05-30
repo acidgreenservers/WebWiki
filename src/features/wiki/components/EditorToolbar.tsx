@@ -10,6 +10,7 @@ import {
   Tag, 
   Link2, 
   Plus, 
+  PlusSquare,
   X,
   Calendar,
   Users,
@@ -27,6 +28,7 @@ interface EditorToolbarProps {
   onAddTag: (tag: string) => void;
   onAddConnection: (pageId: string) => void;
   onAddSection: (sectionType: string) => void;
+  onCreateSubPage?: (parentId: string) => void;
 }
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
@@ -36,7 +38,8 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onInsertLink,
   onAddTag,
   onAddConnection,
-  onAddSection
+  onAddSection,
+  onCreateSubPage
 }) => {
   const [showLinkMenu, setShowLinkMenu] = useState(false);
   const [showTagInput, setShowTagInput] = useState(false);
@@ -240,7 +243,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </div>
 
         {/* Structured Sections */}
-        <div className="relative">
+        <div className="relative border-r border-border pr-2 mr-2">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -300,6 +303,20 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             </div>
           )}
         </div>
+
+        {/* Create Sub-page */}
+        {onCreateSubPage && currentPage && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onCreateSubPage(currentPage.id)}
+            title="Create Sub-page"
+            className="text-primary hover:bg-primary/10"
+          >
+            <PlusSquare className="h-4 w-4 mr-2" />
+            <span className="text-xs font-semibold">New Sub-page</span>
+          </Button>
+        )}
       </div>
 
       {/* Current page tags display */}
