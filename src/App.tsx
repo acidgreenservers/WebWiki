@@ -6,7 +6,7 @@ import { PageList } from '@/features/wiki/components/PageList';
 import { ExportPanel } from '@/features/wiki/components/ExportPanel';
 import { ImportPanel } from '@/features/wiki/components/ImportPanel';
 import { Button } from '@/components/ui/button';
-import { Plus, BookOpen, Download, Upload, Database } from 'lucide-react';
+import { Plus, BookOpen, Download, Upload, Database, Menu, X, PlusSquare } from 'lucide-react';
 import { DeleteConfirmationModal } from '@/features/wiki/components/DeleteConfirmationModal';
 
 function App() {
@@ -15,6 +15,10 @@ function App() {
   const [showExport, setShowExport] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [storage] = useState(() => new WikiStorage());
+
+  // Mobile UI state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showMobileCreateMenu, setShowMobileCreateMenu] = useState(false);
 
   // Deletion state
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -218,18 +222,29 @@ function App() {
   return (
     <div className="flex flex-col h-screen bg-background" 
          style={{ backgroundImage: 'radial-gradient(ellipse at 30% 20%, rgba(30, 50, 80, 0.6) 0%, transparent 60%)' }}>
-      <header className="bg-transparent text-text-primary p-4 border-b border-border">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold flex items-center">
-            <BookOpen className="mr-2 text-primary" />
-            <span className="font-sans font-semibold">WebWiki</span>
-          </h1>
+      <header className="bg-transparent text-text-primary p-4 border-b border-border z-30">
+        <div className="w-full px-4 flex justify-between items-center">
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mr-2 md:hidden"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            >
+              {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+            <h1 className="text-2xl font-bold flex items-center">
+              <BookOpen className="mr-2 text-primary" />
+              <span className="font-sans font-semibold">WebWiki</span>
+            </h1>
+          </div>
+
           <div className="flex items-center space-x-4">
-            <div className="flex items-center text-sm bg-surface px-3 py-1 rounded-full border border-border">
+            <div className="hidden sm:flex items-center text-sm bg-surface px-3 py-1 rounded-full border border-border">
               <Database className="mr-2 h-4 w-4 text-success" />
               <span>LOCAL ONLY</span>
             </div>
-            <div className="flex space-x-2">
+            <div className="hidden md:flex space-x-2">
               <Button 
                 onClick={() => setShowImport(true)}
                 variant="outline"
@@ -258,19 +273,34 @@ function App() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="w-64 bg-surface border-r border-border overflow-y-auto">
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Mobile Sidebar Overlay */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar */}
+        <div className={`
+          fixed inset-y-0 left-0 w-64 bg-surface border-r border-border overflow-y-auto z-50 transition-transform duration-300 md:relative md:translate-x-0
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}>
           <PageList 
             pages={pages} 
             selectedPage={selectedPage}
-            onSelectPage={handleSelectPage}
+            onSelectPage={(page) => {
+              handleSelectPage(page);
+              setIsSidebarOpen(false);
+            }}
             onDeletePage={handleDeletePage}
             onCreateSubPage={handleCreatePage}
             onMovePage={handleMovePage}
           />
         </div>
 
-        <div className="flex-1 overflow-auto bg-background">
+        <div className="flex-1 overflow-auto bg-background pb-20 md:pb-0">
           {selectedPage ? (
             <PageEditor 
               page={selectedPage} 
@@ -310,6 +340,60 @@ function App() {
           onImportComplete={handleImportComplete}
         />
       )}
+
+      {/* Mobile Bottom Navigation Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface border-t border-border flex items-center justify-around z-40 px-4">
+        <Button
+          variant="ghost"
+          className="flex flex-col items-center gap-1 text-text-secondary hover:text-primary"
+          onClick={() => setShowImport(true)}
+        >
+          <Upload className="h-5 w-5" />
+          <span className="text-[10px] uppercase font-bold tracking-tighter">Import</span>
+        </Button>
+
+        <div className="relative">
+          {showMobileCreateMenu && (
+            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col gap-2 w-48 animate-in fade-in slide-in-from-bottom-4 duration-200">
+              <Button
+                onClick={() => {
+                  handleCreatePage(selectedPage?.id || null);
+                  setShowMobileCreateMenu(false);
+                }}
+                className="bg-primary hover:bg-primary-hover text-white shadow-lg"
+              >
+                <PlusSquare className="h-4 w-4 mr-2" />
+                New Sub-page
+              </Button>
+              <Button
+                onClick={() => {
+                  handleCreatePage(null);
+                  setShowMobileCreateMenu(false);
+                }}
+                className="bg-elevated hover:bg-border border border-border text-text-primary shadow-lg"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Root Page
+              </Button>
+            </div>
+          )}
+          <Button
+            className="w-14 h-14 rounded-full bg-primary hover:bg-primary-hover shadow-[0_4px_20px_rgba(59,110,248,0.5)] -mt-10 border-4 border-background"
+            onClick={() => setShowMobileCreateMenu(!showMobileCreateMenu)}
+          >
+            {showMobileCreateMenu ? <X className="h-6 w-6" /> : <Plus className="h-8 w-8" />}
+          </Button>
+        </div>
+
+        <Button
+          variant="ghost"
+          className="flex flex-col items-center gap-1 text-text-secondary hover:text-primary"
+          onClick={() => setShowExport(true)}
+        >
+          <Download className="h-5 w-5" />
+          <span className="text-[10px] uppercase font-bold tracking-tighter">Export</span>
+        </Button>
+      </div>
 
       <DeleteConfirmationModal
         isOpen={deleteDialog.isOpen}
