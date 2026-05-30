@@ -1,0 +1,18 @@
+
+### Invariants Maintained
+- All data stored locally in IndexedDB
+- Export/import maintains full compatibility
+- UI reflects current storage state
+- No external network dependencies
+
+## Confidence Gates
+- **>80%**: Implement implicit requirements (e.g., zip export support)
+- **>90%**: Modify core architecture (e.g., storage schema changes)
+- **<80%**: Request clarification or additional exploration
+
+## Self-Review Protocol
+After any output:
+1. Verify logical consistency across all connections
+2. Confirm accuracy of code implementation details
+3. Ensure completeness of described functionality
+4. Flag any uncertain areas with specific tension points
