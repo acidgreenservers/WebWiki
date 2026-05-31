@@ -38,10 +38,10 @@ function App() {
     loadPages();
   }, [storage, selectedPage]);
 
-  const handleCreatePage = async (parentId: string | null = null) => {
+  const handleCreatePage = async (parentId: string | null = null, siblingId: string | null = null) => {
     const newPage: WikiPage = {
       id: Date.now().toString(),
-      title: parentId ? 'New Sub-page' : 'New Page',
+      title: parentId ? 'New Sub-page' : (siblingId ? 'New Sibling' : 'New Page'),
       content: '',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -64,11 +64,47 @@ function App() {
       } else {
         setPages(prev => [...prev, newPage]);
       }
+    } else if (siblingId) {
+      // Find where to insert the new page (after the sibling)
+      const sibling = pages.find(p => p.id === siblingId);
+      const actualParentId = sibling?.parentId || null;
+
+      // Update the new page with the sibling's parent
+      newPage.parentId = actualParentId;
+      newPage.title = 'New Sibling';
+      await storage.savePage(newPage);
+
+      if (actualParentId) {
+        const parent = pages.find(p => p.id === actualParentId);
+        if (parent) {
+          const siblingIndex = (parent.children || []).indexOf(siblingId);
+          const newChildren = [...(parent.children || [])];
+          newChildren.splice(siblingIndex + 1, 0, newPage.id);
+
+          const updatedParent = {
+            ...parent,
+            children: newChildren,
+            updatedAt: new Date()
+          };
+          await storage.savePage(updatedParent);
+          setPages(prev => prev.map(p => p.id === actualParentId ? updatedParent : p).concat(newPage));
+        } else {
+          setPages(prev => [...prev, newPage]);
+        }
+      } else {
+        setPages(prev => [...prev, newPage]);
+      }
     } else {
       setPages(prev => [...prev, newPage]);
     }
 
     setSelectedPage(newPage);
+  };
+
+  const handleCreateSiblingPage = async (siblingId: string) => {
+    const sibling = pages.find(p => p.id === siblingId);
+    if (!sibling) return;
+    await handleCreatePage(null, siblingId);
   };
 
   const getRecursiveIds = (id: string, allPages: WikiPage[]): string[] => {
@@ -296,6 +332,7 @@ function App() {
             }}
             onDeletePage={handleDeletePage}
             onCreateSubPage={handleCreatePage}
+            onCreateSiblingPage={handleCreateSiblingPage}
             onMovePage={handleMovePage}
           />
         </div>
@@ -307,6 +344,7 @@ function App() {
               onSave={handleUpdatePage}
               onSelectPage={handleSelectPage}
               onCreateSubPage={handleCreatePage}
+              onCreateSiblingPage={handleCreateSiblingPage}
               allPages={pages}
             />
           ) : (
@@ -355,6 +393,18 @@ function App() {
         <div className="relative">
           {showMobileCreateMenu && (
             <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col gap-2 w-48 animate-in fade-in slide-in-from-bottom-4 duration-200">
+              {selectedPage && (
+                <Button
+                  onClick={() => {
+                    handleCreateSiblingPage(selectedPage.id);
+                    setShowMobileCreateMenu(false);
+                  }}
+                  className="bg-primary hover:bg-primary-hover text-white shadow-lg"
+                >
+                  <PlusSquare className="h-4 w-4 mr-2" />
+                  New Sibling
+                </Button>
+              )}
               <Button
                 onClick={() => {
                   handleCreatePage(selectedPage?.id || null);
@@ -362,7 +412,7 @@ function App() {
                 }}
                 className="bg-primary hover:bg-primary-hover text-white shadow-lg"
               >
-                <PlusSquare className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-2" />
                 New Sub-page
               </Button>
               <Button

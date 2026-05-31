@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { WikiPage } from '@/features/wiki/types/wiki';
 import { Button } from '@/components/ui/button';
-import { Trash2, FileText, ChevronRight, ChevronDown, Plus } from 'lucide-react';
+import { Trash2, FileText, ChevronRight, ChevronDown, Plus, PlusSquare } from 'lucide-react';
 
 interface PageListProps {
   pages: WikiPage[];
@@ -9,6 +9,7 @@ interface PageListProps {
   onSelectPage: (page: WikiPage) => void;
   onDeletePage: (id: string) => void;
   onCreateSubPage: (parentId: string) => void;
+  onCreateSiblingPage: (siblingId: string) => void;
   onMovePage: (pageId: string, newParentId: string | null) => void;
 }
 
@@ -18,6 +19,7 @@ export const PageList: React.FC<PageListProps> = ({
   onSelectPage,
   onDeletePage,
   onCreateSubPage,
+  onCreateSiblingPage,
   onMovePage
 }) => {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -95,6 +97,18 @@ export const PageList: React.FC<PageListProps> = ({
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0 hover:text-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCreateSiblingPage(page.id);
+                }}
+                title="Create Sibling Page"
+              >
+                <PlusSquare className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 hover:text-primary ml-1"
                 onClick={(e) => {
                   e.stopPropagation();
                   onCreateSubPage(page.id);
