@@ -29,6 +29,7 @@ interface EditorToolbarProps {
   onAddConnection: (pageId: string) => void;
   onAddSection: (sectionType: string) => void;
   onCreateSubPage?: (parentId: string) => void;
+  onCreateSiblingPage?: (siblingId: string) => void;
 }
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
@@ -39,7 +40,8 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onAddTag,
   onAddConnection,
   onAddSection,
-  onCreateSubPage
+  onCreateSubPage,
+  onCreateSiblingPage
 }) => {
   const [showLinkMenu, setShowLinkMenu] = useState(false);
   const [showTagInput, setShowTagInput] = useState(false);
@@ -304,6 +306,20 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           )}
         </div>
 
+        {/* Create Sibling Page */}
+        {onCreateSiblingPage && currentPage && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onCreateSiblingPage(currentPage.id)}
+            title="Create Sibling Page"
+            className="text-primary hover:bg-primary/10"
+          >
+            <PlusSquare className="h-4 w-4 mr-2" />
+            <span className="text-xs font-semibold">New Sibling</span>
+          </Button>
+        )}
+
         {/* Create Sub-page */}
         {onCreateSubPage && currentPage && (
           <Button
@@ -313,7 +329,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             title="Create Sub-page"
             className="text-primary hover:bg-primary/10"
           >
-            <PlusSquare className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-2" />
             <span className="text-xs font-semibold">New Sub-page</span>
           </Button>
         )}

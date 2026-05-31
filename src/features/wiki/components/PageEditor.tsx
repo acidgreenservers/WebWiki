@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { WikiPage } from '@/features/wiki/types/wiki';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ interface PageEditorProps {
   onSave: (page: WikiPage) => void;
   onSelectPage: (page: WikiPage) => void;
   onCreateSubPage: (parentId: string) => void;
+  onCreateSiblingPage: (siblingId: string) => void;
   allPages: WikiPage[];
 }
 
@@ -20,6 +21,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({
   onSave,
   onSelectPage,
   onCreateSubPage,
+  onCreateSiblingPage,
   allPages
 }) => {
   const [title, setTitle] = useState(page.title);
@@ -29,9 +31,11 @@ export const PageEditor: React.FC<PageEditorProps> = ({
   useEffect(() => {
     setTitle(page.title);
     setContent(page.content);
-  }, [page]);
+  }, [page.id]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
+    if (isSaving) return;
+
     setIsSaving(true);
     const updatedPage = {
       ...page,
@@ -45,7 +49,19 @@ export const PageEditor: React.FC<PageEditorProps> = ({
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [page, title, content, onSave, isSaving]);
+
+  // Autosave logic
+  useEffect(() => {
+    const hasChanges = title !== page.title || content !== page.content;
+
+    if (hasChanges && !isSaving) {
+      const timer = setTimeout(() => {
+        handleSave();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [title, content, page.title, page.content, page.id, isSaving, handleSave]);
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -140,6 +156,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({
         onAddConnection={handleAddConnection}
         onAddSection={handleAddSection}
         onCreateSubPage={onCreateSubPage}
+        onCreateSiblingPage={onCreateSiblingPage}
       />
       <Card className="flex-1 flex flex-col border-0 rounded-none shadow-none bg-background">
         <CardHeader className="border-b border-border bg-surface">
