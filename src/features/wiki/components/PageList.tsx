@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { WikiPage } from '@/features/wiki/types/wiki';
 import { Button } from '@/components/ui/button';
-import { Trash2, FileText, ChevronRight, ChevronDown, Plus, PlusSquare } from 'lucide-react';
+import { Trash2, FileText, Folder, ChevronRight, ChevronDown, Plus, PlusSquare } from 'lucide-react';
 
 interface PageListProps {
   pages: WikiPage[];
@@ -88,8 +88,14 @@ export const PageList: React.FC<PageListProps> = ({
               ) : (
                 <div className="w-4 mr-1" />
               )}
-              <FileText className="h-4 w-4 text-text-secondary mr-2 flex-shrink-0" />
-              <span className="truncate text-text-primary text-sm">{page.title}</span>
+              {page.type === 'folder' ? (
+                <Folder className="h-4 w-4 text-primary mr-2 flex-shrink-0" />
+              ) : (
+                <FileText className="h-4 w-4 text-text-secondary mr-2 flex-shrink-0" />
+              )}
+              <span className={`truncate text-sm ${page.type === 'folder' ? 'text-primary font-medium' : 'text-text-primary'}`}>
+                {page.title}
+              </span>
             </div>
 
             <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">

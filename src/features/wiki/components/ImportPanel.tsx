@@ -73,6 +73,7 @@ export const ImportPanel: React.FC<ImportPanelProps> = ({ onClose, onImportCompl
         updatedAt: new Date(data.updatedAt || Date.now()),
         parentId: data.parentId || null,
         children: data.children || [],
+        type: data.type || 'document',
         tags: data.tags,
         category: data.category
       };

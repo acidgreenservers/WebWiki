@@ -6,7 +6,7 @@ import { PageList } from '@/features/wiki/components/PageList';
 import { ExportPanel } from '@/features/wiki/components/ExportPanel';
 import { ImportPanel } from '@/features/wiki/components/ImportPanel';
 import { Button } from '@/components/ui/button';
-import { Plus, BookOpen, Download, Upload, Database, Menu, X, PlusSquare } from 'lucide-react';
+import { Plus, BookOpen, Download, Upload, Database, Menu, X, PlusSquare, FolderPlus, FilePlus } from 'lucide-react';
 import { DeleteConfirmationModal } from '@/features/wiki/components/DeleteConfirmationModal';
 
 function App() {
@@ -38,15 +38,16 @@ function App() {
     loadPages();
   }, [storage, selectedPage]);
 
-  const handleCreatePage = async (parentId: string | null = null, siblingId: string | null = null) => {
+  const handleCreatePage = async (parentId: string | null = null, siblingId: string | null = null, type: 'document' | 'folder' = 'document') => {
     const newPage: WikiPage = {
       id: Date.now().toString(),
-      title: parentId ? 'New Sub-page' : (siblingId ? 'New Sibling' : 'New Page'),
+      title: type === 'folder' ? 'New Folder' : (parentId ? 'New Sub-page' : (siblingId ? 'New Sibling' : 'New Page')),
       content: '',
       createdAt: new Date(),
       updatedAt: new Date(),
       parentId: parentId,
       children: [],
+      type: type,
     };
     
     await storage.savePage(newPage);
@@ -298,11 +299,19 @@ function App() {
                 Export
               </Button>
               <Button 
-                onClick={() => handleCreatePage(null)}
+                onClick={() => handleCreatePage(null, null, 'document')}
+                variant="outline"
                 className="flex items-center"
               >
-                <Plus className="mr-2 h-4 w-4" />
+                <FilePlus className="mr-2 h-4 w-4" />
                 New Page
+              </Button>
+              <Button
+                onClick={() => handleCreatePage(null, null, 'folder')}
+                className="flex items-center"
+              >
+                <FolderPlus className="mr-2 h-4 w-4" />
+                New Folder
               </Button>
             </div>
           </div>
@@ -407,13 +416,23 @@ function App() {
               )}
               <Button
                 onClick={() => {
-                  handleCreatePage(selectedPage?.id || null);
+                  handleCreatePage(selectedPage?.id || null, null, 'document');
                   setShowMobileCreateMenu(false);
                 }}
                 className="bg-primary hover:bg-primary-hover text-white shadow-lg"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <FilePlus className="h-4 w-4 mr-2" />
                 New Sub-page
+              </Button>
+              <Button
+                onClick={() => {
+                  handleCreatePage(selectedPage?.id || null, null, 'folder');
+                  setShowMobileCreateMenu(false);
+                }}
+                className="bg-primary hover:bg-primary-hover text-white shadow-lg"
+              >
+                <FolderPlus className="h-4 w-4 mr-2" />
+                New Folder
               </Button>
               <Button
                 onClick={() => {

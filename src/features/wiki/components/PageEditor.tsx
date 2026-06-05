@@ -81,7 +81,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({
   const handleInsertLink = (pageId: string) => {
     const targetPage = allPages.find(p => p.id === pageId);
     if (targetPage) {
-      setContent(prev => prev + ` [[${targetPage.title}]]`);
+      setContent(prev => prev + ` [${targetPage.title}](${targetPage.id})`);
     }
   };
 

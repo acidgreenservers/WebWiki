@@ -92,6 +92,29 @@ describe('WikiStorage', () => {
     });
   });
 
+  // ─── Migration ─────────────────────────────────────────
+
+  describe('migration', () => {
+    it('should migrate old internal links and add type', async () => {
+      const page1 = createPage({ id: 'p1', title: 'Target', content: 'Some content' });
+      const page2 = createPage({
+        id: 'p2',
+        title: 'Source',
+        content: 'Check this [[Target]]',
+        // No type field (simulating old data)
+      } as any);
+
+      await storage.savePage(page1);
+      await storage.savePage(page2);
+
+      const pages = await storage.getAllPages();
+      const migratedSource = pages.find(p => p.id === 'p2');
+
+      expect(migratedSource!.type).toBe('document');
+      expect(migratedSource!.content).toBe('Check this [Target](p1)');
+    });
+  });
+
   // ─── Read ──────────────────────────────────────────────
 
   describe('getPage', () => {
@@ -239,7 +262,7 @@ describe('WikiStorage', () => {
 
   // ─── Export ────────────────────────────────────────────
 
-  describe('exportPages', () => {
+  describe('exportWikiZip', () => {
     function mockDownload() {
       const spyClick = vi.fn();
       const originalCreateElement = document.createElement.bind(document);
@@ -260,45 +283,34 @@ describe('WikiStorage', () => {
       return { spyClick };
     }
 
-    it('should export as JSON', async () => {
-      const page = createPage({ id: 'export-json', title: 'JSON Page', content: 'json content' });
+    it('should export as markdown zip', async () => {
+      const page = createPage({ id: 'export-md', title: 'MD Page', content: 'md content', type: 'document' });
       await storage.savePage(page);
 
       const { spyClick } = mockDownload();
-      await storage.exportPages('json', [page]);
+      await storage.exportWikiZip('markdown', page, [page]);
 
       expect(spyClick).toHaveBeenCalled();
       vi.restoreAllMocks();
     });
 
-    it('should export as markdown', async () => {
-      const page = createPage({ id: 'export-md', title: 'MD Page', content: 'md content' });
+    it('should export as HTML reader', async () => {
+      const page = createPage({ id: 'export-html', title: 'HTML Page', content: 'html content', type: 'document' });
       await storage.savePage(page);
 
       const { spyClick } = mockDownload();
-      await storage.exportPages('markdown', [page]);
+      await storage.exportWikiZip('html', page, [page]);
 
       expect(spyClick).toHaveBeenCalled();
       vi.restoreAllMocks();
     });
 
-    it('should export as HTML', async () => {
-      const page = createPage({ id: 'export-html', title: 'HTML Page', content: 'html content' });
+    it('should export as text zip', async () => {
+      const page = createPage({ id: 'export-txt', title: 'Text Page', content: 'text content', type: 'document' });
       await storage.savePage(page);
 
       const { spyClick } = mockDownload();
-      await storage.exportPages('html', [page]);
-
-      expect(spyClick).toHaveBeenCalled();
-      vi.restoreAllMocks();
-    });
-
-    it('should export as text', async () => {
-      const page = createPage({ id: 'export-txt', title: 'Text Page', content: 'text content' });
-      await storage.savePage(page);
-
-      const { spyClick } = mockDownload();
-      await storage.exportPages('text', [page]);
+      await storage.exportWikiZip('text', page, [page]);
 
       expect(spyClick).toHaveBeenCalled();
       vi.restoreAllMocks();
