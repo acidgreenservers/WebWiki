@@ -6,7 +6,8 @@ import { PageList } from '@/features/wiki/components/PageList';
 import { ExportPanel } from '@/features/wiki/components/ExportPanel';
 import { ImportPanel } from '@/features/wiki/components/ImportPanel';
 import { Button } from '@/components/ui/button';
-import { Plus, BookOpen, Download, Upload, Database, Menu, X, PlusSquare, FolderPlus, FilePlus } from 'lucide-react';
+import { Plus, BookOpen, Download, Upload, Database, Menu, X, PlusSquare, FolderPlus, FilePlus, ChevronDown } from 'lucide-react';
+import { DropdownMenu, DropdownItem } from '@/components/ui/dropdown-menu';
 import { DeleteConfirmationModal } from '@/features/wiki/components/DeleteConfirmationModal';
 
 function App() {
@@ -54,7 +55,7 @@ function App() {
 
     if (parentId) {
       const parentPage = pages.find(p => p.id === parentId);
-      if (parentPage) {
+      if (parentPage && parentPage.type === 'folder') {
         const updatedParent = {
           ...parentPage,
           children: [...(parentPage.children || []), newPage.id],
@@ -183,6 +184,15 @@ function App() {
     const page = pages.find(p => p.id === pageId);
     if (!page || page.parentId === newParentId) return;
 
+    // Validate that newParent is a folder if not null
+    if (newParentId) {
+      const newParent = pages.find(p => p.id === newParentId);
+      if (!newParent || newParent.type !== 'folder') {
+        console.error("Cannot move into a document. Only folders can have children.");
+        return;
+      }
+    }
+
     // Prevent moving a page into one of its own descendants
     const descendantIds = getRecursiveIds(pageId, pages);
     if (newParentId && descendantIds.includes(newParentId)) {
@@ -298,21 +308,25 @@ function App() {
                 <Download className="mr-2 h-4 w-4" />
                 Export
               </Button>
-              <Button 
-                onClick={() => handleCreatePage(null, null, 'document')}
-                variant="outline"
-                className="flex items-center"
+              <DropdownMenu
+                align="right"
+                trigger={
+                  <Button className="flex items-center">
+                    <Plus className="mr-2 h-4 w-4" />
+                    New
+                    <ChevronDown className="ml-2 h-3 w-3 opacity-50" />
+                  </Button>
+                }
               >
-                <FilePlus className="mr-2 h-4 w-4" />
-                New Page
-              </Button>
-              <Button
-                onClick={() => handleCreatePage(null, null, 'folder')}
-                className="flex items-center"
-              >
-                <FolderPlus className="mr-2 h-4 w-4" />
-                New Folder
-              </Button>
+                <DropdownItem onClick={() => handleCreatePage(null, null, 'document')}>
+                  <FilePlus className="mr-2 h-4 w-4 text-primary" />
+                  New Page
+                </DropdownItem>
+                <DropdownItem onClick={() => handleCreatePage(null, null, 'folder')}>
+                  <FolderPlus className="mr-2 h-4 w-4 text-primary" />
+                  New Folder
+                </DropdownItem>
+              </DropdownMenu>
             </div>
 
             <div className="hidden md:flex lg:hidden space-x-2">
@@ -324,21 +338,23 @@ function App() {
               >
                 <Download className="h-4 w-4" />
               </Button>
-              <Button
-                onClick={() => handleCreatePage(null, null, 'document')}
-                variant="outline"
-                size="sm"
-                title="New Page"
+              <DropdownMenu
+                align="right"
+                trigger={
+                  <Button size="sm">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                }
               >
-                <FilePlus className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={() => handleCreatePage(null, null, 'folder')}
-                size="sm"
-                title="New Folder"
-              >
-                <FolderPlus className="h-4 w-4" />
-              </Button>
+                <DropdownItem onClick={() => handleCreatePage(null, null, 'document')}>
+                  <FilePlus className="mr-2 h-4 w-4 text-primary" />
+                  New Page
+                </DropdownItem>
+                <DropdownItem onClick={() => handleCreatePage(null, null, 'folder')}>
+                  <FolderPlus className="mr-2 h-4 w-4 text-primary" />
+                  New Folder
+                </DropdownItem>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -389,20 +405,25 @@ function App() {
                 <BookOpen className="mx-auto h-12 w-12 text-primary" />
                 <h3 className="mt-4 text-xl font-semibold text-text-primary">No page selected</h3>
                 <p className="mt-2">Create a new page or select an existing one to begin</p>
-                <div className="flex gap-2 justify-center mt-6">
-                  <Button
-                    onClick={() => handleCreatePage(null, null, 'document')}
-                    variant="outline"
+                <div className="flex justify-center mt-6">
+                  <DropdownMenu
+                    trigger={
+                      <Button className="flex items-center">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create First Entry
+                        <ChevronDown className="ml-2 h-3 w-3 opacity-50" />
+                      </Button>
+                    }
                   >
-                    <FilePlus className="mr-2 h-4 w-4" />
-                    New Page
-                  </Button>
-                  <Button
-                    onClick={() => handleCreatePage(null, null, 'folder')}
-                  >
-                    <FolderPlus className="mr-2 h-4 w-4" />
-                    New Folder
-                  </Button>
+                    <DropdownItem onClick={() => handleCreatePage(null, null, 'document')}>
+                      <FilePlus className="mr-2 h-4 w-4 text-primary" />
+                      New Root Page
+                    </DropdownItem>
+                    <DropdownItem onClick={() => handleCreatePage(null, null, 'folder')}>
+                      <FolderPlus className="mr-2 h-4 w-4 text-primary" />
+                      New Root Folder
+                    </DropdownItem>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
@@ -437,45 +458,63 @@ function App() {
 
         <div className="relative">
           {showMobileCreateMenu && (
-            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col gap-2 w-48 animate-in fade-in slide-in-from-bottom-4 duration-200">
+            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col gap-2 w-56 animate-in fade-in slide-in-from-bottom-4 duration-200">
               {selectedPage && (
-                <Button
-                  onClick={() => {
-                    handleCreateSiblingPage(selectedPage.id);
-                    setShowMobileCreateMenu(false);
-                  }}
-                  className="bg-primary hover:bg-primary-hover text-white shadow-lg"
-                >
-                  <PlusSquare className="h-4 w-4 mr-2" />
-                  New Sibling
-                </Button>
+                <>
+                  <Button
+                    onClick={() => {
+                      handleCreateSiblingPage(selectedPage.id, 'document');
+                      setShowMobileCreateMenu(false);
+                    }}
+                    className="bg-primary hover:bg-primary-hover text-white shadow-lg justify-start"
+                  >
+                    <FilePlus className="h-4 w-4 mr-2" />
+                    New Sibling Page
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      handleCreateSiblingPage(selectedPage.id, 'folder');
+                      setShowMobileCreateMenu(false);
+                    }}
+                    className="bg-primary hover:bg-primary-hover text-white shadow-lg justify-start"
+                  >
+                    <FolderPlus className="h-4 w-4 mr-2" />
+                    New Sibling Folder
+                  </Button>
+                  <div className="h-px bg-border/50 my-1" />
+                </>
               )}
-              <Button
-                onClick={() => {
-                  handleCreatePage(selectedPage?.id || null, null, 'document');
-                  setShowMobileCreateMenu(false);
-                }}
-                className="bg-primary hover:bg-primary-hover text-white shadow-lg"
-              >
-                <FilePlus className="h-4 w-4 mr-2" />
-                New Sub-page
-              </Button>
-              <Button
-                onClick={() => {
-                  handleCreatePage(selectedPage?.id || null, null, 'folder');
-                  setShowMobileCreateMenu(false);
-                }}
-                className="bg-primary hover:bg-primary-hover text-white shadow-lg"
-              >
-                <FolderPlus className="h-4 w-4 mr-2" />
-                New Folder
-              </Button>
+              {selectedPage?.type === 'folder' && (
+                <>
+                  <Button
+                    onClick={() => {
+                      handleCreatePage(selectedPage.id, null, 'document');
+                      setShowMobileCreateMenu(false);
+                    }}
+                    className="bg-primary hover:bg-primary-hover text-white shadow-lg justify-start"
+                  >
+                    <PlusSquare className="h-4 w-4 mr-2" />
+                    New Sub-page
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      handleCreatePage(selectedPage.id, null, 'folder');
+                      setShowMobileCreateMenu(false);
+                    }}
+                    className="bg-primary hover:bg-primary-hover text-white shadow-lg justify-start"
+                  >
+                    <FolderPlus className="h-4 w-4 mr-2" />
+                    New Sub-folder
+                  </Button>
+                  <div className="h-px bg-border/50 my-1" />
+                </>
+              )}
               <Button
                 onClick={() => {
                   handleCreatePage(null, null, 'document');
                   setShowMobileCreateMenu(false);
                 }}
-                className="bg-elevated hover:bg-border border border-border text-text-primary shadow-lg"
+                className="bg-elevated hover:bg-border border border-border text-text-primary shadow-lg justify-start"
               >
                 <FilePlus className="h-4 w-4 mr-2" />
                 New Root Page
@@ -485,7 +524,7 @@ function App() {
                   handleCreatePage(null, null, 'folder');
                   setShowMobileCreateMenu(false);
                 }}
-                className="bg-elevated hover:bg-border border border-border text-text-primary shadow-lg"
+                className="bg-elevated hover:bg-border border border-border text-text-primary shadow-lg justify-start"
               >
                 <FolderPlus className="h-4 w-4 mr-2" />
                 New Root Folder

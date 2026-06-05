@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { WikiPage } from '@/features/wiki/types/wiki';
 import { Button } from '@/components/ui/button';
-import { Trash2, FileText, Folder, ChevronRight, ChevronDown, Plus, PlusSquare, FolderPlus, FilePlus } from 'lucide-react';
+import { Trash2, FileText, Folder, ChevronRight, ChevronDown, Plus, PlusSquare, FolderPlus, FilePlus, MoreVertical } from 'lucide-react';
+import { DropdownMenu, DropdownItem } from '@/components/ui/dropdown-menu';
 
 interface PageListProps {
   pages: WikiPage[];
@@ -63,17 +64,24 @@ export const PageList: React.FC<PageListProps> = ({
             }}
             onDragOver={(e) => {
               e.preventDefault();
-              e.dataTransfer.dropEffect = 'move';
-              e.currentTarget.classList.add('bg-primary/10');
+              if (page.type === 'folder') {
+                e.dataTransfer.dropEffect = 'move';
+                e.currentTarget.classList.add('bg-primary/20');
+                e.currentTarget.classList.add('border-primary');
+              } else {
+                e.dataTransfer.dropEffect = 'none';
+              }
             }}
             onDragLeave={(e) => {
-              e.currentTarget.classList.remove('bg-primary/10');
+              e.currentTarget.classList.remove('bg-primary/20');
+              e.currentTarget.classList.remove('border-primary');
             }}
             onDrop={(e) => {
               e.preventDefault();
-              e.currentTarget.classList.remove('bg-primary/10');
+              e.currentTarget.classList.remove('bg-primary/20');
+              e.currentTarget.classList.remove('border-primary');
               const draggedId = e.dataTransfer.getData('pageId');
-              if (draggedId && draggedId !== page.id) {
+              if (draggedId && draggedId !== page.id && page.type === 'folder') {
                 onMovePage(draggedId, page.id);
               }
             }}
@@ -101,54 +109,37 @@ export const PageList: React.FC<PageListProps> = ({
             </div>
 
             <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 hover:text-primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCreateSiblingPage(page.id, 'document');
-                }}
-                title="Create Sibling Page"
+              <DropdownMenu
+                align="right"
+                trigger={
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                }
               >
-                <PlusSquare className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 hover:text-primary ml-0.5"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCreateSiblingPage(page.id, 'folder');
-                }}
-                title="Create Sibling Folder"
-              >
-                <FolderPlus className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 hover:text-primary ml-1"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCreateSubPage(page.id, 'document');
-                }}
-                title="Create Sub-page"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 hover:text-primary ml-0.5"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCreateSubPage(page.id, 'folder');
-                }}
-                title="Create Sub-folder"
-              >
-                <FolderPlus className="h-3.5 w-3.5" />
-              </Button>
+                <DropdownItem onClick={() => onCreateSiblingPage(page.id, 'document')}>
+                  <FilePlus className="h-4 w-4 mr-2 text-primary" />
+                  New Sibling Page
+                </DropdownItem>
+                <DropdownItem onClick={() => onCreateSiblingPage(page.id, 'folder')}>
+                  <FolderPlus className="h-4 w-4 mr-2 text-primary" />
+                  New Sibling Folder
+                </DropdownItem>
+                {page.type === 'folder' && (
+                  <>
+                    <div className="h-px bg-border my-1" />
+                    <DropdownItem onClick={() => onCreateSubPage(page.id, 'document')}>
+                      <PlusSquare className="h-4 w-4 mr-2 text-primary" />
+                      New Sub-page
+                    </DropdownItem>
+                    <DropdownItem onClick={() => onCreateSubPage(page.id, 'folder')}>
+                      <FolderPlus className="h-4 w-4 mr-2 text-primary" />
+                      New Sub-folder
+                    </DropdownItem>
+                  </>
+                )}
+              </DropdownMenu>
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -157,7 +148,7 @@ export const PageList: React.FC<PageListProps> = ({
                   e.stopPropagation();
                   onDeletePage(page.id);
                 }}
-                title="Delete Page"
+                title="Delete"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
@@ -186,26 +177,28 @@ export const PageList: React.FC<PageListProps> = ({
       <h2 className="font-semibold text-text-secondary px-2 py-3 border-b border-border uppercase text-xs tracking-wider flex justify-between items-center">
         <span>Pages ({pages.length})</span>
         {onCreateRootPage && (
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 hover:text-primary"
-              onClick={() => onCreateRootPage('document')}
-              title="New Root Page"
-            >
-              <FilePlus className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 hover:text-primary"
-              onClick={() => onCreateRootPage('folder')}
-              title="New Root Folder"
-            >
-              <FolderPlus className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+          <DropdownMenu
+            align="right"
+            trigger={
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 hover:text-primary"
+                title="Add New"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            }
+          >
+            <DropdownItem onClick={() => onCreateRootPage('document')}>
+              <FilePlus className="h-4 w-4 mr-2 text-primary" />
+              New Root Page
+            </DropdownItem>
+            <DropdownItem onClick={() => onCreateRootPage('folder')}>
+              <FolderPlus className="h-4 w-4 mr-2 text-primary" />
+              New Root Folder
+            </DropdownItem>
+          </DropdownMenu>
         )}
       </h2>
       <div
