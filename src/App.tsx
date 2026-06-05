@@ -102,10 +102,10 @@ function App() {
     setSelectedPage(newPage);
   };
 
-  const handleCreateSiblingPage = async (siblingId: string) => {
+  const handleCreateSiblingPage = async (siblingId: string, type: 'document' | 'folder' = 'document') => {
     const sibling = pages.find(p => p.id === siblingId);
     if (!sibling) return;
-    await handleCreatePage(null, siblingId);
+    await handleCreatePage(null, siblingId, type);
   };
 
   const getRecursiveIds = (id: string, allPages: WikiPage[]): string[] => {
@@ -281,7 +281,7 @@ function App() {
               <Database className="mr-2 h-4 w-4 text-success" />
               <span>LOCAL ONLY</span>
             </div>
-            <div className="hidden md:flex space-x-2">
+            <div className="hidden lg:flex space-x-2">
               <Button 
                 onClick={() => setShowImport(true)}
                 variant="outline"
@@ -314,6 +314,32 @@ function App() {
                 New Folder
               </Button>
             </div>
+
+            <div className="hidden md:flex lg:hidden space-x-2">
+               <Button
+                onClick={() => setShowExport(true)}
+                variant="outline"
+                size="sm"
+                title="Export"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => handleCreatePage(null, null, 'document')}
+                variant="outline"
+                size="sm"
+                title="New Page"
+              >
+                <FilePlus className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => handleCreatePage(null, null, 'folder')}
+                size="sm"
+                title="New Folder"
+              >
+                <FolderPlus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -342,6 +368,7 @@ function App() {
             onDeletePage={handleDeletePage}
             onCreateSubPage={handleCreatePage}
             onCreateSiblingPage={handleCreateSiblingPage}
+            onCreateRootPage={(type) => handleCreatePage(null, null, type)}
             onMovePage={handleMovePage}
           />
         </div>
@@ -436,13 +463,23 @@ function App() {
               </Button>
               <Button
                 onClick={() => {
-                  handleCreatePage(null);
+                  handleCreatePage(null, null, 'document');
                   setShowMobileCreateMenu(false);
                 }}
                 className="bg-elevated hover:bg-border border border-border text-text-primary shadow-lg"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <FilePlus className="h-4 w-4 mr-2" />
                 New Root Page
+              </Button>
+              <Button
+                onClick={() => {
+                  handleCreatePage(null, null, 'folder');
+                  setShowMobileCreateMenu(false);
+                }}
+                className="bg-elevated hover:bg-border border border-border text-text-primary shadow-lg"
+              >
+                <FolderPlus className="h-4 w-4 mr-2" />
+                New Root Folder
               </Button>
             </div>
           )}

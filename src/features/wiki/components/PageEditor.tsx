@@ -11,8 +11,8 @@ interface PageEditorProps {
   page: WikiPage;
   onSave: (page: WikiPage) => void;
   onSelectPage: (page: WikiPage) => void;
-  onCreateSubPage: (parentId: string) => void;
-  onCreateSiblingPage: (siblingId: string) => void;
+  onCreateSubPage: (parentId: string, type?: 'document' | 'folder') => void;
+  onCreateSiblingPage: (siblingId: string, type?: 'document' | 'folder') => void;
   allPages: WikiPage[];
 }
 

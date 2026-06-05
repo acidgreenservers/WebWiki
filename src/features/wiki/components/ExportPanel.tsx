@@ -112,29 +112,35 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
                 }}
                 className="mt-3 space-y-3"
               >
-                <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${format === 'markdown' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}>
+                <Label
+                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${format === 'markdown' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+                >
                   <RadioGroupItem value="markdown" id="markdown" className="border-border text-primary" />
-                  <Label htmlFor="markdown" className="flex items-center space-x-2 text-text-primary cursor-pointer flex-1">
+                  <div className="flex items-center space-x-2 text-text-primary flex-1">
                     <FileCode className="h-5 w-5 text-primary" />
                     <span>Zipped Markdown</span>
-                  </Label>
-                </div>
+                  </div>
+                </Label>
                 
-                <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${format === 'html' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}>
+                <Label
+                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${format === 'html' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+                >
                   <RadioGroupItem value="html" id="html" className="border-border text-primary" />
-                  <Label htmlFor="html" className="flex items-center space-x-2 text-text-primary cursor-pointer flex-1">
+                  <div className="flex items-center space-x-2 text-text-primary flex-1">
                     <FileArchive className="h-5 w-5 text-primary" />
                     <span>Single-file HTML Reader</span>
-                  </Label>
-                </div>
+                  </div>
+                </Label>
 
-                <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${format === 'text' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}>
+                <Label
+                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${format === 'text' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+                >
                   <RadioGroupItem value="text" id="text" className="border-border text-primary" />
-                  <Label htmlFor="text" className="flex items-center space-x-2 text-text-primary cursor-pointer flex-1">
+                  <div className="flex items-center space-x-2 text-text-primary flex-1">
                     <FileText className="h-5 w-5 text-primary" />
                     <span>Plain Text Bundle</span>
-                  </Label>
-                </div>
+                  </div>
+                </Label>
               </RadioGroup>
             </div>
 
