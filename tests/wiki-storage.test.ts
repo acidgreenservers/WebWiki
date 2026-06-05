@@ -12,6 +12,7 @@ function createPage(overrides: Partial<WikiPage> = {}): WikiPage {
     updatedAt: now,
     parentId: null,
     children: [],
+    type: 'document',
     ...overrides,
   };
 }

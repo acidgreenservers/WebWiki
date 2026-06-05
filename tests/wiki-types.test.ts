@@ -11,6 +11,7 @@ describe('WikiPage type contract', () => {
       updatedAt: new Date(),
       parentId: null,
       children: [],
+      type: 'document',
     };
 
     expect(page.id).toBe('test-id');
@@ -31,6 +32,7 @@ describe('WikiPage type contract', () => {
       updatedAt: new Date(),
       parentId: 'parent-1',
       children: ['child-1', 'child-2'],
+      type: 'document',
       tags: ['tag-a', 'tag-b'],
       category: 'reference',
     };
@@ -48,6 +50,7 @@ describe('WikiPage type contract', () => {
       updatedAt: new Date(),
       parentId: null,
       children: ['child-1'],
+      type: 'document',
     };
 
     expect(root.parentId).toBeNull();
@@ -62,6 +65,7 @@ describe('WikiPage type contract', () => {
       updatedAt: new Date(),
       parentId: 'root',
       children: [],
+      type: 'document',
     };
 
     expect(child.parentId).toBe('root');
@@ -76,6 +80,7 @@ describe('WikiPage type contract', () => {
       updatedAt: new Date(),
       parentId: null,
       children: [],
+      type: 'document',
     };
 
     expect(page.tags).toBeUndefined();
@@ -93,6 +98,7 @@ describe('WikiPage structural patterns', () => {
       updatedAt: new Date(),
       parentId: null,
       children: ['child-a', 'child-b'],
+      type: 'document',
     };
 
     const childA: WikiPage = {
@@ -103,6 +109,7 @@ describe('WikiPage structural patterns', () => {
       updatedAt: new Date(),
       parentId: 'root',
       children: ['grandchild'],
+      type: 'document',
     };
 
     const childB: WikiPage = {
@@ -113,6 +120,7 @@ describe('WikiPage structural patterns', () => {
       updatedAt: new Date(),
       parentId: 'root',
       children: [],
+      type: 'document',
     };
 
     const grandchild: WikiPage = {
@@ -123,6 +131,7 @@ describe('WikiPage structural patterns', () => {
       updatedAt: new Date(),
       parentId: 'child-a',
       children: [],
+      type: 'document',
     };
 
     // Verify parent-child relationships
@@ -143,10 +152,10 @@ describe('WikiPage structural patterns', () => {
 
   it('should support page type categorization via category field', () => {
     const pages: WikiPage[] = [
-      { id: '1', title: 'Section', content: '', createdAt: new Date(), updatedAt: new Date(), parentId: null, children: [], category: 'section' },
-      { id: '2', title: 'Heading', content: '', createdAt: new Date(), updatedAt: new Date(), parentId: null, children: [], category: 'heading' },
-      { id: '3', title: 'Paragraph', content: '', createdAt: new Date(), updatedAt: new Date(), parentId: null, children: [], category: 'paragraph' },
-      { id: '4', title: 'Code', content: '', createdAt: new Date(), updatedAt: new Date(), parentId: null, children: [], category: 'code' },
+      { id: '1', title: 'Section', content: '', createdAt: new Date(), updatedAt: new Date(), parentId: null, children: [], category: 'section', type: 'document' },
+      { id: '2', title: 'Heading', content: '', createdAt: new Date(), updatedAt: new Date(), parentId: null, children: [], category: 'heading', type: 'document' },
+      { id: '3', title: 'Paragraph', content: '', createdAt: new Date(), updatedAt: new Date(), parentId: null, children: [], category: 'paragraph', type: 'document' },
+      { id: '4', title: 'Code', content: '', createdAt: new Date(), updatedAt: new Date(), parentId: null, children: [], category: 'code', type: 'document' },
     ];
 
     const byCategory = new Map<string, WikiPage[]>();

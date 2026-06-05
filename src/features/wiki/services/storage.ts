@@ -210,23 +210,38 @@ export class WikiStorage {
     format: 'text' | 'markdown'
   ) {
     const extension = format === 'markdown' ? 'md' : 'txt';
-    let content = page.content;
 
+    // For the folder itself, we create an index file
+    let content = page.content;
     if (format === 'markdown') {
       content = this.rewriteLinksToRelative(content, page, subset);
       content = `# ${page.title}\n\n${content}`;
     } else {
       content = `${page.title}\n${'='.repeat(page.title.length)}\n\n${content}`;
     }
-
     currentFolder.file(`index.${extension}`, content);
 
     const children = subset.filter(p => p.parentId === page.id);
     for (const child of children) {
-      const childFolderName = child.title.replace(/[/\\?%*:|"<>]/g, '-');
-      const childFolder = currentFolder.folder(childFolderName);
-      if (childFolder) {
-        this.buildZipRecursive(child, subset, childFolder, format);
+      const safeTitle = child.title.replace(/[/\\?%*:|"<>]/g, '-');
+      const hasChildren = subset.some(p => p.parentId === child.id);
+
+      if (child.type === 'folder' || hasChildren) {
+        // Create a directory for folders or documents with children
+        const childFolder = currentFolder.folder(safeTitle);
+        if (childFolder) {
+          this.buildZipRecursive(child, subset, childFolder, format);
+        }
+      } else {
+        // Simple document file
+        let childContent = child.content;
+        if (format === 'markdown') {
+          childContent = this.rewriteLinksToRelative(childContent, child, subset);
+          childContent = `# ${child.title}\n\n${childContent}`;
+        } else {
+          childContent = `${child.title}\n${'='.repeat(child.title.length)}\n\n${childContent}`;
+        }
+        currentFolder.file(`${safeTitle}.${extension}`, childContent);
       }
     }
   }
@@ -253,14 +268,30 @@ export class WikiStorage {
       commonDepth++;
     }
 
-    // How many steps up from fromPage to common ancestor
-    const upSteps = fromPath.length - commonDepth;
+    // A document is a file IF it has no children AND is not a folder
+    const isFile = (p: WikiPage) => p.type === 'document' && !subset.some(child => child.parentId === p.id);
+
+    // If fromPage is a directory, its file is index.md.
+    // If it's a file, we are starting from the parent directory of that file.
+    // Wait, if I'm at Folder/Doc.md and want to go to Folder/Other.md, it's ./Other.md.
+    // If I'm at Folder/index.md and want to go to Folder/Doc.md, it's ./Doc.md.
+
+    // Let's determine if fromPage is in its own directory or just a file in parent directory
+    const fromIsFile = isFile(fromPage);
+    const upSteps = (fromPath.length - commonDepth) - (fromIsFile ? 1 : 0);
     const dots = upSteps > 0 ? "../".repeat(upSteps) : "./";
 
-    // Steps down from common ancestor to toPage
-    const downSteps = toPath.slice(commonDepth).map(p => p.title.replace(/[/\\?%*:|"<>]/g, '-')).join('/');
+    // Build the path down
+    const segments = toPath.slice(commonDepth).map(p => p.title.replace(/[/\\?%*:|"<>]/g, '-'));
+    const toIsFile = isFile(toPage);
 
-    return `${dots}${downSteps}${downSteps ? '/' : ''}index.md`;
+    if (toIsFile) {
+      // Just the filename
+      return `${dots}${segments.join('/')}.md`;
+    } else {
+      // Directory + index.md
+      return `${dots}${segments.join('/')}${segments.length > 0 ? '/' : ''}index.md`;
+    }
   }
 
   private getAncestry(page: WikiPage, subset: WikiPage[]): WikiPage[] {
