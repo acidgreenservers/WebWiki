@@ -389,12 +389,21 @@ function App() {
                 <BookOpen className="mx-auto h-12 w-12 text-primary" />
                 <h3 className="mt-4 text-xl font-semibold text-text-primary">No page selected</h3>
                 <p className="mt-2">Create a new page or select an existing one to begin</p>
-                <Button 
-                  onClick={() => handleCreatePage(null)}
-                  className="mt-6"
-                >
-                  Create New Page
-                </Button>
+                <div className="flex gap-2 justify-center mt-6">
+                  <Button
+                    onClick={() => handleCreatePage(null, null, 'document')}
+                    variant="outline"
+                  >
+                    <FilePlus className="mr-2 h-4 w-4" />
+                    New Page
+                  </Button>
+                  <Button
+                    onClick={() => handleCreatePage(null, null, 'folder')}
+                  >
+                    <FolderPlus className="mr-2 h-4 w-4" />
+                    New Folder
+                  </Button>
+                </div>
               </div>
             </div>
           )}

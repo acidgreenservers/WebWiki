@@ -140,6 +140,18 @@ export const PageList: React.FC<PageListProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
+                className="h-6 w-6 p-0 hover:text-primary ml-0.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCreateSubPage(page.id, 'folder');
+                }}
+                title="Create Sub-folder"
+              >
+                <FolderPlus className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 className="h-6 w-6 p-0 hover:text-red-danger ml-1"
                 onClick={(e) => {
                   e.stopPropagation();
