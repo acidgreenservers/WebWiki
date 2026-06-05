@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { WikiPage } from '@/features/wiki/types/wiki';
 import { Button } from '@/components/ui/button';
-import { Trash2, FileText, Folder, ChevronRight, ChevronDown, Plus, PlusSquare } from 'lucide-react';
+import { Trash2, FileText, Folder, ChevronRight, ChevronDown, Plus, PlusSquare, FolderPlus, FilePlus } from 'lucide-react';
 
 interface PageListProps {
   pages: WikiPage[];
   selectedPage: WikiPage | null;
   onSelectPage: (page: WikiPage) => void;
   onDeletePage: (id: string) => void;
-  onCreateSubPage: (parentId: string) => void;
-  onCreateSiblingPage: (siblingId: string) => void;
+  onCreateSubPage: (parentId: string, type?: 'document' | 'folder') => void;
+  onCreateSiblingPage: (siblingId: string, type?: 'document' | 'folder') => void;
+  onCreateRootPage?: (type: 'document' | 'folder') => void;
   onMovePage: (pageId: string, newParentId: string | null) => void;
 }
 
@@ -20,6 +21,7 @@ export const PageList: React.FC<PageListProps> = ({
   onDeletePage,
   onCreateSubPage,
   onCreateSiblingPage,
+  onCreateRootPage,
   onMovePage
 }) => {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -105,7 +107,7 @@ export const PageList: React.FC<PageListProps> = ({
                 className="h-6 w-6 p-0 hover:text-primary"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onCreateSiblingPage(page.id);
+                  onCreateSiblingPage(page.id, 'document');
                 }}
                 title="Create Sibling Page"
               >
@@ -114,14 +116,38 @@ export const PageList: React.FC<PageListProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
+                className="h-6 w-6 p-0 hover:text-primary ml-0.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCreateSiblingPage(page.id, 'folder');
+                }}
+                title="Create Sibling Folder"
+              >
+                <FolderPlus className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 className="h-6 w-6 p-0 hover:text-primary ml-1"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onCreateSubPage(page.id);
+                  onCreateSubPage(page.id, 'document');
                 }}
                 title="Create Sub-page"
               >
                 <Plus className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 hover:text-primary ml-0.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCreateSubPage(page.id, 'folder');
+                }}
+                title="Create Sub-folder"
+              >
+                <FolderPlus className="h-3.5 w-3.5" />
               </Button>
               <Button
                 variant="ghost"
@@ -159,6 +185,28 @@ export const PageList: React.FC<PageListProps> = ({
     <div className="p-3">
       <h2 className="font-semibold text-text-secondary px-2 py-3 border-b border-border uppercase text-xs tracking-wider flex justify-between items-center">
         <span>Pages ({pages.length})</span>
+        {onCreateRootPage && (
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 hover:text-primary"
+              onClick={() => onCreateRootPage('document')}
+              title="New Root Page"
+            >
+              <FilePlus className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 hover:text-primary"
+              onClick={() => onCreateRootPage('folder')}
+              title="New Root Folder"
+            >
+              <FolderPlus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
       </h2>
       <div
         className="mt-2 min-h-[50px]"

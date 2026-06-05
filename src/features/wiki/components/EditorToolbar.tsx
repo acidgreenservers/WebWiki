@@ -15,7 +15,8 @@ import {
   Calendar,
   Users,
   MapPin,
-  Paperclip
+  Paperclip,
+  FolderPlus
 } from 'lucide-react';
 import { WikiPage } from '@/features/wiki/types/wiki';
 import { Input } from '@/components/ui/input';
@@ -28,8 +29,8 @@ interface EditorToolbarProps {
   onAddTag: (tag: string) => void;
   onAddConnection: (pageId: string) => void;
   onAddSection: (sectionType: string) => void;
-  onCreateSubPage?: (parentId: string) => void;
-  onCreateSiblingPage?: (siblingId: string) => void;
+  onCreateSubPage?: (parentId: string, type?: 'document' | 'folder') => void;
+  onCreateSiblingPage?: (siblingId: string, type?: 'document' | 'folder') => void;
 }
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
@@ -308,30 +309,50 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
         {/* Create Sibling Page */}
         {onCreateSiblingPage && currentPage && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onCreateSiblingPage(currentPage.id)}
-            title="Create Sibling Page"
-            className="text-primary hover:bg-primary/10"
-          >
-            <PlusSquare className="h-4 w-4 mr-2" />
-            <span className="text-xs font-semibold">New Sibling</span>
-          </Button>
+          <div className="flex border-r border-border pr-2 mr-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCreateSiblingPage(currentPage.id, 'document')}
+              title="Create Sibling Page"
+              className="text-primary hover:bg-primary/10"
+            >
+              <PlusSquare className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCreateSiblingPage(currentPage.id, 'folder')}
+              title="Create Sibling Folder"
+              className="text-primary hover:bg-primary/10"
+            >
+              <FolderPlus className="h-4 w-4" />
+            </Button>
+          </div>
         )}
 
         {/* Create Sub-page */}
         {onCreateSubPage && currentPage && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onCreateSubPage(currentPage.id)}
-            title="Create Sub-page"
-            className="text-primary hover:bg-primary/10"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="text-xs font-semibold">New Sub-page</span>
-          </Button>
+          <div className="flex">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCreateSubPage(currentPage.id, 'document')}
+              title="Create Sub-page"
+              className="text-primary hover:bg-primary/10"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCreateSubPage(currentPage.id, 'folder')}
+              title="Create Sub-folder"
+              className="text-primary hover:bg-primary/10"
+            >
+              <FolderPlus className="h-4 w-4" />
+            </Button>
+          </div>
         )}
       </div>
 
