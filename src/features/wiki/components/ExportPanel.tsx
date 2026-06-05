@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Download, X, FileText, FileCode, FileArchive } from 'lucide-react';
+import { Download, X, FileText, FileCode, FileArchive, ChevronDown, ChevronRight, Folder, File } from 'lucide-react';
 import { WikiStorage } from '@/features/wiki/services/storage';
 import { WikiPage } from '@/features/wiki/types/wiki';
 
@@ -13,15 +13,26 @@ interface ExportPanelProps {
 }
 
 export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
-  const [format, setFormat] = useState<'text' | 'markdown' | 'html' | 'json'>('text');
+  const [format, setFormat] = useState<'text' | 'markdown' | 'html'>('markdown');
+  const [selectedRootId, setSelectedRootId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedNodes(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const handleExport = async () => {
+    if (!selectedRootId) return;
     setIsExporting(true);
     
     try {
       const storage = new WikiStorage();
-      await storage.exportPages(format, pages);
+      const rootPage = pages.find(p => p.id === selectedRootId);
+      if (rootPage) {
+        await storage.exportWikiZip(format, rootPage, pages);
+      }
     } catch (error) {
       console.error('Export failed:', error);
     } finally {
@@ -34,24 +45,42 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
       case 'text':
         return 'Plain text format with basic formatting';
       case 'markdown':
-        return 'Markdown format with headers and lists';
+        return 'Zipped Markdown with recursive folder structure';
       case 'html':
-        return 'Styled HTML document with CSS';
-      case 'json':
-        return 'Structured JSON data for import (compatible with WebWiki)';
+        return 'Single-file styled HTML Reader with embedded data';
       default:
         return '';
     }
   };
 
-  const getFormatIcon = () => {
-    switch (format) {
-      case 'text': return <FileText className="h-5 w-5 text-primary" />;
-      case 'markdown': return <FileCode className="h-5 w-5 text-primary" />;
-      case 'html': return <FileCode className="h-5 w-5 text-primary" />;
-      case 'json': return <FileCode className="h-5 w-5 text-primary" />;
-      default: return <FileText className="h-5 w-5 text-primary" />;
-    }
+  const rootPages = pages.filter(p => !p.parentId);
+
+  const renderPageTree = (pageId: string, level: number = 0) => {
+    const page = pages.find(p => p.id === pageId);
+    if (!page) return null;
+
+    const children = pages.filter(p => p.parentId === pageId);
+    const isExpanded = expandedNodes[pageId];
+
+    return (
+      <div key={pageId} className="select-none">
+        <div
+          className="flex items-center py-1 px-2 hover:bg-border-subtle rounded cursor-default"
+          style={{ paddingLeft: `${level * 16 + 8}px` }}
+        >
+          {children.length > 0 ? (
+            <button onClick={(e) => toggleExpand(pageId, e)} className="mr-1">
+              {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            </button>
+          ) : (
+            <div className="w-4 mr-1" />
+          )}
+          {page.type === 'folder' ? <Folder className="h-3.5 w-3.5 mr-2 text-primary" /> : <File className="h-3.5 w-3.5 mr-2 text-text-secondary" />}
+          <span className="text-xs text-text-primary">{page.title}</span>
+        </div>
+        {isExpanded && children.map(child => renderPageTree(child.id, level + 1))}
+      </div>
+    );
   };
 
   return (
@@ -77,65 +106,81 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
               <Label className="text-base font-medium text-text-primary">Export Format</Label>
               <RadioGroup 
                 value={format} 
-                onValueChange={(value) => setFormat(value as any)}
+                onValueChange={(value) => {
+                  setFormat(value as any);
+                  setSelectedRootId(null);
+                }}
                 className="mt-3 space-y-3"
               >
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-elevated hover:border-primary hover:bg-surface transition-colors">
-                  <RadioGroupItem value="text" id="text" className="border-border text-primary" />
-                  <Label htmlFor="text" className="flex items-center space-x-2 text-text-primary cursor-pointer flex-1">
-                    <FileText className="h-5 w-5 text-primary" />
-                    <span>Plain Text</span>
-                  </Label>
-                </div>
-                
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-elevated hover:border-primary hover:bg-surface transition-colors">
+                <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${format === 'markdown' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}>
                   <RadioGroupItem value="markdown" id="markdown" className="border-border text-primary" />
                   <Label htmlFor="markdown" className="flex items-center space-x-2 text-text-primary cursor-pointer flex-1">
                     <FileCode className="h-5 w-5 text-primary" />
-                    <span>Markdown</span>
+                    <span>Zipped Markdown</span>
                   </Label>
                 </div>
                 
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-elevated hover:border-primary hover:bg-surface transition-colors">
+                <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${format === 'html' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}>
                   <RadioGroupItem value="html" id="html" className="border-border text-primary" />
                   <Label htmlFor="html" className="flex items-center space-x-2 text-text-primary cursor-pointer flex-1">
-                    <FileCode className="h-5 w-5 text-primary" />
-                    <span>Styled HTML</span>
+                    <FileArchive className="h-5 w-5 text-primary" />
+                    <span>Single-file HTML Reader</span>
                   </Label>
                 </div>
-                
-                <div className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-elevated hover:border-primary hover:bg-surface transition-colors">
-                  <RadioGroupItem value="json" id="json" className="border-border text-primary" />
-                  <Label htmlFor="json" className="flex items-center space-x-2 text-text-primary cursor-pointer flex-1">
-                    <FileArchive className="h-5 w-5 text-primary" />
-                    <span>WebWiki JSON</span>
+
+                <div className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${format === 'text' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}>
+                  <RadioGroupItem value="text" id="text" className="border-border text-primary" />
+                  <Label htmlFor="text" className="flex items-center space-x-2 text-text-primary cursor-pointer flex-1">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <span>Plain Text Bundle</span>
                   </Label>
                 </div>
               </RadioGroup>
             </div>
 
-            <div className="p-3 rounded-lg bg-border-subtle border border-border">
-              <div className="flex items-start">
-                {getFormatIcon()}
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-text-primary">
-                    {format === 'json' ? 'WebWiki JSON Format' : format.charAt(0).toUpperCase() + format.slice(1)}
-                  </p>
-                  <p className="text-xs text-text-secondary mt-1">
-                    {format === 'json' 
-                      ? 'Structured format for importing into WebWiki. Contains all page data and metadata.' 
-                      : getFormatDescription()}
-                  </p>
-                  {format === 'json' && (
-                    <div className="mt-2 p-2 bg-surface rounded text-xs font-mono text-text-secondary overflow-x-auto">
-                      {`{ "version": "1.0", "pages": [ ... ] }`}
+            {format && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                <Label className="text-base font-medium text-text-primary">Select Entry Point</Label>
+                <p className="text-xs text-text-secondary mb-3 italic">{getFormatDescription()}</p>
+
+                <div className="mt-2 border border-border rounded-lg overflow-hidden bg-elevated max-h-60 overflow-y-auto">
+                  {rootPages.map(rootPage => (
+                    <div key={rootPage.id} className="border-b border-border last:border-0">
+                      <div
+                        className={`flex items-center p-3 cursor-pointer transition-colors ${selectedRootId === rootPage.id ? 'bg-primary/10 border-l-4 border-primary' : 'hover:bg-surface border-l-4 border-transparent'}`}
+                        onClick={() => setSelectedRootId(rootPage.id)}
+                      >
+                        <div className="flex-1 flex items-center">
+                          {rootPage.type === 'folder' ? <Folder className="h-4 w-4 mr-2 text-primary" /> : <File className="h-4 w-4 mr-2 text-text-secondary" />}
+                          <span className="font-medium text-sm text-text-primary">{rootPage.title}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={(e) => toggleExpand(rootPage.id, e)}
+                        >
+                          {expandedNodes[rootPage.id] ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                      {expandedNodes[rootPage.id] && (
+                        <div className="bg-background/50 py-1 border-t border-border/50">
+                          {pages.filter(p => p.parentId === rootPage.id).map(child => renderPageTree(child.id, 1))}
+                          {pages.filter(p => p.parentId === rootPage.id).length === 0 && (
+                            <div className="px-8 py-1 text-[10px] text-text-muted italic">No sub-pages</div>
+                          )}
+                        </div>
+                      )}
                     </div>
+                  ))}
+                  {rootPages.length === 0 && (
+                    <div className="p-4 text-center text-text-secondary text-sm italic">No entries available</div>
                   )}
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-3 pt-2">
               <Button 
                 variant="outline"
                 onClick={onClose}
@@ -144,8 +189,8 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
               </Button>
               <Button 
                 onClick={handleExport}
-                disabled={isExporting}
-                className="flex items-center"
+                disabled={isExporting || !selectedRootId}
+                className="flex items-center min-w-[100px]"
               >
                 {isExporting ? (
                   <>

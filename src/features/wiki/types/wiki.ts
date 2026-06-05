@@ -1,3 +1,5 @@
+export type WikiPageType = 'document' | 'folder';
+
 export interface WikiPage {
   id: string;
   title: string;
@@ -6,6 +8,7 @@ export interface WikiPage {
   updatedAt: Date;
   parentId: string | null;
   children: string[];
+  type: WikiPageType;
   tags?: string[];
   category?: string;
 }
