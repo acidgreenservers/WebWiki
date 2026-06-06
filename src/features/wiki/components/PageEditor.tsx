@@ -119,11 +119,21 @@ export const PageEditor: React.FC<PageEditorProps> = ({
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const currentText = textarea.value;
+
+    // Logic to ensure block-level elements start on a new line
+    let effectiveTextBefore = textBefore;
+    if ((textBefore.startsWith('\n') || textBefore.startsWith('###') || textBefore.startsWith('##')) && start > 0) {
+      const charBefore = currentText.charAt(start - 1);
+      if (charBefore !== '\n') {
+        effectiveTextBefore = '\n' + textBefore;
+      }
+    }
+
     const selectedText = currentText.substring(start, end);
 
     const newText =
       currentText.substring(0, start) +
-      textBefore +
+      effectiveTextBefore +
       selectedText +
       textAfter +
       currentText.substring(end);
@@ -133,7 +143,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({
     // Set focus back and adjust selection
     setTimeout(() => {
       textarea.focus();
-      const newCursorPos = start + textBefore.length + selectedText.length + textAfter.length;
+      const newCursorPos = start + effectiveTextBefore.length + selectedText.length + textAfter.length;
       textarea.setSelectionRange(newCursorPos, newCursorPos);
     }, 0);
   };
@@ -148,6 +158,9 @@ export const PageEditor: React.FC<PageEditorProps> = ({
         break;
       case 'unordered-list':
         insertAtCursor('\n- ', '');
+        break;
+      case 'star-list':
+        insertAtCursor('\n* ', '');
         break;
       case 'ordered-list':
         insertAtCursor('\n1. ', '');
