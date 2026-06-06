@@ -434,6 +434,7 @@ function App() {
       {showExport && (
         <ExportPanel 
           pages={pages} 
+          currentPage={selectedPage}
           onClose={() => setShowExport(false)} 
         />
       )}
