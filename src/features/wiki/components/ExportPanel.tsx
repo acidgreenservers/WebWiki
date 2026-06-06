@@ -10,11 +10,13 @@ import { WikiPage } from '@/features/wiki/types/wiki';
 interface ExportPanelProps {
   onClose: () => void;
   pages: WikiPage[];
+  currentPage?: WikiPage | null;
 }
 
-export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
+export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages, currentPage }) => {
   const [format, setFormat] = useState<'text' | 'markdown' | 'html'>('markdown');
-  const [selectedRootId, setSelectedRootId] = useState<string | null>(null);
+  const [scope, setScope] = useState<'current' | 'all'>('current');
+  const [selectedRootId, setSelectedRootId] = useState<string | null>(currentPage?.id || null);
   const [isExporting, setIsExporting] = useState(false);
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
 
@@ -31,7 +33,11 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
       const storage = new WikiStorage();
       const rootPage = pages.find(p => p.id === selectedRootId);
       if (rootPage) {
-        await storage.exportWikiZip(format, rootPage, pages);
+        if (scope === 'current') {
+          await storage.exportSinglePage(format, rootPage);
+        } else {
+          await storage.exportWikiZip(format, rootPage, pages);
+        }
       }
     } catch (error) {
       console.error('Export failed:', error);
@@ -103,6 +109,35 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
         <CardContent className="pt-6">
           <div className="space-y-6">
             <div>
+              <Label className="text-base font-medium text-text-primary">Export Scope</Label>
+              <RadioGroup
+                value={scope}
+                onValueChange={(value) => {
+                  setScope(value as any);
+                  if (value === 'current' && currentPage) {
+                    setSelectedRootId(currentPage.id);
+                  } else {
+                    setSelectedRootId(null);
+                  }
+                }}
+                className="mt-3 grid grid-cols-2 gap-3"
+              >
+                <Label
+                  className={`flex items-center justify-center space-x-2 p-3 rounded-lg border transition-colors cursor-pointer ${scope === 'current' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+                >
+                  <RadioGroupItem value="current" id="current" className="border-border text-primary" />
+                  <span className="text-xs">Current Page</span>
+                </Label>
+                <Label
+                  className={`flex items-center justify-center space-x-2 p-3 rounded-lg border transition-colors cursor-pointer ${scope === 'all' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+                >
+                  <RadioGroupItem value="all" id="all" className="border-border text-primary" />
+                  <span className="text-xs">Recursive Wiki</span>
+                </Label>
+              </RadioGroup>
+            </div>
+
+            <div>
               <Label className="text-base font-medium text-text-primary">Export Format</Label>
               <RadioGroup 
                 value={format} 
@@ -144,12 +179,12 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
               </RadioGroup>
             </div>
 
-            {format && (
+            {format && scope === 'all' && (
               <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                 <Label className="text-base font-medium text-text-primary">Select Entry Point</Label>
                 <p className="text-xs text-text-secondary mb-3 italic">{getFormatDescription()}</p>
 
-                <div className="mt-2 border border-border rounded-lg overflow-hidden bg-elevated max-h-60 overflow-y-auto">
+                <div className="mt-2 border border-border rounded-lg overflow-hidden bg-elevated max-h-48 overflow-y-auto">
                   {rootPages.map(rootPage => (
                     <div key={rootPage.id} className="border-b border-border last:border-0">
                       <div
@@ -183,6 +218,14 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages }) => {
                     <div className="p-4 text-center text-text-secondary text-sm italic">No entries available</div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {scope === 'current' && (
+              <div className="p-3 rounded-lg bg-border-subtle border border-border">
+                <p className="text-xs text-text-secondary italic">
+                  Exporting {currentPage?.title || 'selected page'} as {format.toUpperCase()}
+                </p>
               </div>
             )}
 
