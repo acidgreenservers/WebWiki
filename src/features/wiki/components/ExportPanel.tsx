@@ -47,9 +47,22 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages, curren
   };
 
   const getFormatDescription = () => {
+    if (scope === 'current') {
+      switch (format) {
+        case 'text':
+          return 'Export current page as plain text (.txt)';
+        case 'markdown':
+          return 'Export current page as Markdown (.md)';
+        case 'html':
+          return 'Export current page as styled HTML (.html)';
+        default:
+          return '';
+      }
+    }
+
     switch (format) {
       case 'text':
-        return 'Plain text format with basic formatting';
+        return 'Zipped plain text bundle with recursive folder structure';
       case 'markdown':
         return 'Zipped Markdown with recursive folder structure';
       case 'html':
@@ -113,11 +126,16 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages, curren
               <RadioGroup
                 value={scope}
                 onValueChange={(value) => {
-                  setScope(value as any);
-                  if (value === 'current' && currentPage) {
+                    const newScope = value as 'current' | 'all';
+                    setScope(newScope);
+                    if (newScope === 'current' && currentPage) {
                     setSelectedRootId(currentPage.id);
-                  } else {
-                    setSelectedRootId(null);
+                    } else if (newScope === 'all') {
+                      // Only clear if the currently selected root isn't a valid root option
+                      const isCurrentlyRoot = rootPages.some(p => p.id === selectedRootId);
+                      if (!isCurrentlyRoot) {
+                        setSelectedRootId(null);
+                      }
                   }
                 }}
                 className="mt-3 grid grid-cols-2 gap-3"
@@ -139,44 +157,81 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ onClose, pages, curren
 
             <div>
               <Label className="text-base font-medium text-text-primary">Export Format</Label>
-              <RadioGroup 
-                value={format} 
-                onValueChange={(value) => {
-                  setFormat(value as any);
-                  setSelectedRootId(null);
-                }}
-                className="mt-3 space-y-3"
-              >
-                <Label
-                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${format === 'markdown' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+              {scope === 'current' ? (
+                <RadioGroup
+                  key="format-current"
+                  value={format}
+                  onValueChange={(value) => setFormat(value as any)}
+                  className="mt-3 space-y-3"
                 >
-                  <RadioGroupItem value="markdown" id="markdown" className="border-border text-primary" />
-                  <div className="flex items-center space-x-2 text-text-primary flex-1">
-                    <FileCode className="h-5 w-5 text-primary" />
-                    <span>Zipped Markdown</span>
-                  </div>
-                </Label>
-                
-                <Label
-                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${format === 'html' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
-                >
-                  <RadioGroupItem value="html" id="html" className="border-border text-primary" />
-                  <div className="flex items-center space-x-2 text-text-primary flex-1">
-                    <FileArchive className="h-5 w-5 text-primary" />
-                    <span>Single-file HTML Reader</span>
-                  </div>
-                </Label>
+                  <Label
+                    className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${format === 'text' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+                  >
+                    <RadioGroupItem value="text" id="format-text" className="border-border text-primary" />
+                    <div className="flex items-center space-x-2 text-text-primary flex-1">
+                      <FileText className="h-5 w-5 text-primary" />
+                      <span>Plain Text</span>
+                    </div>
+                  </Label>
 
-                <Label
-                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${format === 'text' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+                  <Label
+                    className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${format === 'markdown' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+                  >
+                    <RadioGroupItem value="markdown" id="format-markdown" className="border-border text-primary" />
+                    <div className="flex items-center space-x-2 text-text-primary flex-1">
+                      <FileCode className="h-5 w-5 text-primary" />
+                      <span>Markdown</span>
+                    </div>
+                  </Label>
+
+                  <Label
+                    className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${format === 'html' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+                  >
+                    <RadioGroupItem value="html" id="format-html" className="border-border text-primary" />
+                    <div className="flex items-center space-x-2 text-text-primary flex-1">
+                      <FileArchive className="h-5 w-5 text-primary" />
+                      <span>HTML</span>
+                    </div>
+                  </Label>
+                </RadioGroup>
+              ) : (
+                <RadioGroup
+                  key="format-all"
+                  value={format}
+                  onValueChange={(value) => setFormat(value as any)}
+                  className="mt-3 space-y-3"
                 >
-                  <RadioGroupItem value="text" id="text" className="border-border text-primary" />
-                  <div className="flex items-center space-x-2 text-text-primary flex-1">
-                    <FileText className="h-5 w-5 text-primary" />
-                    <span>Plain Text Bundle</span>
-                  </div>
-                </Label>
-              </RadioGroup>
+                  <Label
+                    className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${format === 'text' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+                  >
+                    <RadioGroupItem value="text" id="format-zipped-text" className="border-border text-primary" />
+                    <div className="flex items-center space-x-2 text-text-primary flex-1">
+                      <FileText className="h-5 w-5 text-primary" />
+                      <span>Zipped Plain Text</span>
+                    </div>
+                  </Label>
+
+                  <Label
+                    className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${format === 'markdown' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+                  >
+                    <RadioGroupItem value="markdown" id="format-zipped-markdown" className="border-border text-primary" />
+                    <div className="flex items-center space-x-2 text-text-primary flex-1">
+                      <FileCode className="h-5 w-5 text-primary" />
+                      <span>Zipped Markdown</span>
+                    </div>
+                  </Label>
+
+                  <Label
+                    className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${format === 'html' ? 'border-primary bg-surface' : 'border-border bg-elevated hover:border-primary/50'}`}
+                  >
+                    <RadioGroupItem value="html" id="format-html-reader" className="border-border text-primary" />
+                    <div className="flex items-center space-x-2 text-text-primary flex-1">
+                      <FileArchive className="h-5 w-5 text-primary" />
+                      <span>HTML Reader</span>
+                    </div>
+                  </Label>
+                </RadioGroup>
+              )}
             </div>
 
             {format && scope === 'all' && (
