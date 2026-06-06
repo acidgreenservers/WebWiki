@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { WikiPage } from '@/features/wiki/types/wiki';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({
   const [title, setTitle] = useState(page.title);
   const [content, setContent] = useState(page.content);
   const [isSaving, setIsSaving] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setTitle(page.title);
@@ -73,16 +74,63 @@ export const PageEditor: React.FC<PageEditorProps> = ({
     }).format(date);
   };
 
+  const insertAtCursor = (textBefore: string, textAfter: string = '') => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentText = textarea.value;
+    const selectedText = currentText.substring(start, end);
+
+    const newText =
+      currentText.substring(0, start) +
+      textBefore +
+      selectedText +
+      textAfter +
+      currentText.substring(end);
+
+    setContent(newText);
+
+    // Set focus back and adjust selection
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = start + textBefore.length + selectedText.length + textAfter.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
+
   const handleFormat = (command: string) => {
-    // Basic formatting logic simulation
-    console.log(`Format: ${command}`);
+    switch (command) {
+      case 'bold':
+        insertAtCursor('**', '**');
+        break;
+      case 'italic':
+        insertAtCursor('_', '_');
+        break;
+      case 'unordered-list':
+        insertAtCursor('\n- ', '');
+        break;
+      case 'ordered-list':
+        insertAtCursor('\n1. ', '');
+        break;
+      case 'blockquote':
+        insertAtCursor('\n> ', '');
+        break;
+      default:
+        console.log(`Unknown format command: ${command}`);
+    }
   };
 
   const handleInsertLink = (pageId: string) => {
     const targetPage = allPages.find(p => p.id === pageId);
     if (targetPage) {
-      setContent(prev => prev + ` [${targetPage.title}](${targetPage.id})`);
+      insertAtCursor(`[${targetPage.title}](${targetPage.id})`);
     }
+  };
+
+  const handleInsertExternalLink = (title: string, url: string) => {
+    insertAtCursor(`[${title}](${url})`);
   };
 
   const handleAddTag = (tag: string) => {
@@ -102,7 +150,27 @@ export const PageEditor: React.FC<PageEditorProps> = ({
   };
 
   const handleAddSection = (type: string) => {
-    setContent(prev => prev + `\n\n## ${type.toUpperCase()}\n- `);
+    let template = '';
+    const now = new Date().toLocaleDateString();
+
+    switch (type) {
+      case 'metadata':
+        template = `\n\n### METADATA\n- **Status:** Draft\n- **Created:** ${now}\n- **Author:** \n- **Type:** ${page.type}\n`;
+        break;
+      case 'timeline':
+        template = `\n\n### TIMELINE\n- **Event 1 (${now}):** Description\n- **Event 2:** Description\n`;
+        break;
+      case 'people':
+        template = `\n\n### PEOPLE\n- **Contact Name:** Role / Relationship\n- **Contact Name:** Role / Relationship\n`;
+        break;
+      case 'locations':
+        template = `\n\n### LOCATIONS\n- **Location Name:** Coordinates / Description\n`;
+        break;
+      default:
+        template = `\n\n## ${type.toUpperCase()}\n- `;
+    }
+
+    insertAtCursor(template);
   };
 
   const getBreadcrumbs = () => {
@@ -152,6 +220,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({
         allPages={allPages}
         onFormat={handleFormat}
         onInsertLink={handleInsertLink}
+        onInsertExternalLink={handleInsertExternalLink}
         onAddTag={handleAddTag}
         onAddConnection={handleAddConnection}
         onAddSection={handleAddSection}
@@ -193,6 +262,7 @@ export const PageEditor: React.FC<PageEditorProps> = ({
         
         <CardContent className="flex-1 p-0 bg-background">
           <Textarea
+            ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="w-full h-full min-h-[500px] p-6 border-0 rounded-none focus:ring-0 resize-none text-lg bg-surface text-text-primary placeholder:text-text-muted"

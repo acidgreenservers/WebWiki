@@ -16,7 +16,9 @@ import {
   Users,
   MapPin,
   Paperclip,
-  FolderPlus
+  FolderPlus,
+  Quote,
+  Globe
 } from 'lucide-react';
 import { WikiPage } from '@/features/wiki/types/wiki';
 import { Input } from '@/components/ui/input';
@@ -26,6 +28,7 @@ interface EditorToolbarProps {
   allPages: WikiPage[];
   onFormat: (command: string) => void;
   onInsertLink: (pageId: string) => void;
+  onInsertExternalLink?: (title: string, url: string) => void;
   onAddTag: (tag: string) => void;
   onAddConnection: (pageId: string) => void;
   onAddSection: (sectionType: string) => void;
@@ -38,6 +41,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   allPages,
   onFormat,
   onInsertLink,
+  onInsertExternalLink,
   onAddTag,
   onAddConnection,
   onAddSection,
@@ -45,11 +49,14 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onCreateSiblingPage
 }) => {
   const [showLinkMenu, setShowLinkMenu] = useState(false);
+  const [showExternalLinkMenu, setShowExternalLinkMenu] = useState(false);
   const [showTagInput, setShowTagInput] = useState(false);
   const [showConnectionMenu, setShowConnectionMenu] = useState(false);
   const [showSectionMenu, setShowSectionMenu] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [externalLinkTitle, setExternalLinkTitle] = useState('');
+  const [externalLinkUrl, setExternalLinkUrl] = useState('');
 
   const filteredPages = allPages.filter(page => 
     page.id !== currentPage?.id && 
@@ -111,55 +118,114 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           >
             <ListOrdered className="h-4 w-4" />
           </Button>
-        </div>
-
-        {/* Links */}
-        <div className="relative border-r border-border pr-2 mr-2">
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => setShowLinkMenu(!showLinkMenu)}
-            className={showLinkMenu ? 'bg-border-subtle' : ''}
-            title="Insert Link"
+            onClick={() => onFormat('blockquote')}
+            title="Blockquote"
           >
-            <Link className="h-4 w-4" />
+            <Quote className="h-4 w-4" />
           </Button>
-          
-          {showLinkMenu && (
-            <div className="absolute top-full left-0 mt-1 w-64 bg-surface border border-border rounded-lg shadow-lg z-10">
-              <div className="p-2 border-b border-border">
+        </div>
+
+        {/* Links */}
+        <div className="relative border-r border-border pr-2 mr-2 flex gap-1">
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowLinkMenu(!showLinkMenu);
+                setShowExternalLinkMenu(false);
+              }}
+              className={showLinkMenu ? 'bg-border-subtle' : ''}
+              title="Insert Internal Link"
+            >
+              <Link className="h-4 w-4" />
+            </Button>
+
+            {showLinkMenu && (
+              <div className="absolute top-full left-0 mt-1 w-64 bg-surface border border-border rounded-lg shadow-lg z-10">
+                <div className="p-2 border-b border-border">
+                  <Input
+                    placeholder="Search pages..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="bg-background border-border"
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto">
+                  {filteredPages.length > 0 ? (
+                    filteredPages.map(page => (
+                      <Button
+                        key={page.id}
+                        variant="ghost"
+                        className="w-full justify-start text-left rounded-none"
+                        onClick={() => {
+                          onInsertLink(page.id);
+                          setShowLinkMenu(false);
+                          setSearchTerm('');
+                        }}
+                      >
+                        <Link2 className="h-4 w-4 mr-2 text-primary" />
+                        {page.title}
+                      </Button>
+                    ))
+                  ) : (
+                    <div className="p-3 text-center text-text-secondary text-sm">
+                      No pages found
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowExternalLinkMenu(!showExternalLinkMenu);
+                setShowLinkMenu(false);
+              }}
+              className={showExternalLinkMenu ? 'bg-border-subtle' : ''}
+              title="Insert External Link"
+            >
+              <Globe className="h-4 w-4" />
+            </Button>
+
+            {showExternalLinkMenu && (
+              <div className="absolute top-full left-0 mt-1 w-64 bg-surface border border-border rounded-lg shadow-lg z-10 p-3 flex flex-col gap-2">
                 <Input 
-                  placeholder="Search pages..." 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="bg-background border-border"
+                  placeholder="Link Title"
+                  value={externalLinkTitle}
+                  onChange={(e) => setExternalLinkTitle(e.target.value)}
+                  className="bg-background border-border h-8"
                 />
+                <Input
+                  placeholder="URL (https://...)"
+                  value={externalLinkUrl}
+                  onChange={(e) => setExternalLinkUrl(e.target.value)}
+                  className="bg-background border-border h-8"
+                />
+                <Button
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    if (onInsertExternalLink && externalLinkUrl) {
+                      onInsertExternalLink(externalLinkTitle || externalLinkUrl, externalLinkUrl);
+                      setExternalLinkTitle('');
+                      setExternalLinkUrl('');
+                      setShowExternalLinkMenu(false);
+                    }
+                  }}
+                >
+                  Insert External Link
+                </Button>
               </div>
-              <div className="max-h-48 overflow-y-auto">
-                {filteredPages.length > 0 ? (
-                  filteredPages.map(page => (
-                    <Button
-                      key={page.id}
-                      variant="ghost"
-                      className="w-full justify-start text-left rounded-none"
-                      onClick={() => {
-                        onInsertLink(page.id);
-                        setShowLinkMenu(false);
-                        setSearchTerm('');
-                      }}
-                    >
-                      <Link2 className="h-4 w-4 mr-2 text-primary" />
-                      {page.title}
-                    </Button>
-                  ))
-                ) : (
-                  <div className="p-3 text-center text-text-secondary text-sm">
-                    No pages found
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Tags */}
