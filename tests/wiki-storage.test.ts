@@ -101,7 +101,7 @@ describe('WikiStorage', () => {
       const page2 = createPage({
         id: 'p2',
         title: 'Source',
-        content: 'Check this [[Target]]',
+        content: 'Check this [[Target]] and [[NonExistent]]',
         // No type field (simulating old data)
       } as any);
 
@@ -112,7 +112,25 @@ describe('WikiStorage', () => {
       const migratedSource = pages.find(p => p.id === 'p2');
 
       expect(migratedSource!.type).toBe('document');
-      expect(migratedSource!.content).toBe('Check this [Target](p1)');
+      expect(migratedSource!.content).toBe('Check this [Target](p1) and [[NonExistent]]');
+    });
+
+    it('should migrate multiple links in one page', async () => {
+      const p1 = createPage({ id: 'p1', title: 'Link 1' });
+      const p2 = createPage({ id: 'p2', title: 'Link 2' });
+      const source = createPage({
+        id: 'src',
+        title: 'Source',
+        content: 'One: [[Link 1]], Two: [[Link 2]]'
+      } as any);
+
+      await storage.savePage(p1);
+      await storage.savePage(p2);
+      await storage.savePage(source);
+
+      const pages = await storage.getAllPages();
+      const migrated = pages.find(p => p.id === 'src');
+      expect(migrated!.content).toBe('One: [Link 1](p1), Two: [Link 2](p2)');
     });
   });
 
