@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock, Save, ChevronRight, Home } from 'lucide-react';
+import { Calendar, Clock, Save, ChevronRight, Home, Eye, EyeOff, GripVertical } from 'lucide-react';
 import { EditorToolbar } from './EditorToolbar';
+import { MarkdownPreview } from './MarkdownPreview';
 
 interface PageEditorProps {
   page: WikiPage;
@@ -27,7 +28,44 @@ export const PageEditor: React.FC<PageEditorProps> = ({
   const [title, setTitle] = useState(page.title);
   const [content, setContent] = useState(page.content);
   const [isSaving, setIsSaving] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [editorWidth, setEditorWidth] = useState(50); // percentage
+  const [isResizing, setIsResizing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  const resize = useCallback((e: MouseEvent) => {
+    if (isResizing && containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+      if (newWidth > 20 && newWidth < 80) {
+        setEditorWidth(newWidth);
+      }
+    }
+  }, [isResizing]);
+
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', resize);
+      window.addEventListener('mouseup', stopResizing);
+    } else {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    }
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
+  }, [isResizing, resize, stopResizing]);
 
   useEffect(() => {
     setTitle(page.title);
@@ -238,14 +276,24 @@ export const PageEditor: React.FC<PageEditorProps> = ({
                 placeholder="Page title"
               />
             </CardTitle>
-            <Button 
-              onClick={handleSave}
-              disabled={isSaving}
-              className="ml-4"
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? 'Saving...' : 'Save'}
-            </Button>
+            <div className="flex items-center gap-2 ml-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowPreview(!showPreview)}
+                className={`flex items-center ${showPreview ? 'bg-primary/20 border-primary text-primary' : ''}`}
+                title={showPreview ? "Hide Preview" : "Show Preview"}
+              >
+                {showPreview ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+                Preview
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {isSaving ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
           </div>
           
           <div className="flex text-sm text-text-secondary mt-3">
@@ -260,14 +308,43 @@ export const PageEditor: React.FC<PageEditorProps> = ({
           </div>
         </CardHeader>
         
-        <CardContent className="flex-1 p-0 bg-background">
-          <Textarea
-            ref={textareaRef}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="w-full h-full min-h-[500px] p-6 border-0 rounded-none focus:ring-0 resize-none text-lg bg-surface text-text-primary placeholder:text-text-muted"
-            placeholder="Start writing your wiki page content here..."
-          />
+        <CardContent
+          ref={containerRef}
+          className={`flex-1 p-0 bg-background flex overflow-hidden ${isResizing ? 'cursor-col-resize select-none' : ''}`}
+        >
+          <div
+            style={{ width: showPreview && window.innerWidth > 768 ? `${editorWidth}%` : '100%' }}
+            className={`h-full flex flex-col border-r border-border ${showPreview && window.innerWidth <= 768 ? 'hidden' : ''}`}
+          >
+            <Textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="w-full h-full min-h-[500px] p-6 border-0 rounded-none focus:ring-0 resize-none text-lg bg-surface text-text-primary placeholder:text-text-muted"
+              placeholder="Start writing your wiki page content here..."
+            />
+          </div>
+
+          {showPreview && (
+            <>
+              {/* Resize Handle - Hidden on mobile */}
+              <div
+                onMouseDown={startResizing}
+                className="hidden md:flex w-1 bg-border hover:bg-primary transition-colors cursor-col-resize items-center justify-center group z-10"
+              >
+                <div className="absolute bg-surface border border-border rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <GripVertical className="h-3 w-3 text-text-secondary" />
+                </div>
+              </div>
+
+              <div
+                style={{ width: window.innerWidth > 768 ? `${100 - editorWidth}%` : '100%' }}
+                className="h-full overflow-hidden"
+              >
+                <MarkdownPreview content={content} />
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
